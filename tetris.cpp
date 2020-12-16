@@ -244,7 +244,10 @@ void Tetris::erase_possible_line()
                 n_line ++;
                 for (int j=0;j<=10;j++)
                 {
-                    erase_element({j*BLOC,i*BLOC});
+                    SDL_Rect tmp;
+                    tmp.x = j*BLOC;
+                    tmp.y = i*BLOC;
+                    erase_element(tmp);
                 }
                 for (int k=i-1;k>=0;k--)
                     for (int l=0;l<10;l++)
@@ -315,7 +318,7 @@ void Tetris::set_tetris()
 {
     SDL_Surface *msurface, *nsurface;
     char mtext[50] = "",ntext[50] ="";
-    police = TTF_OpenFont("./data/fonts/8bitsFont.ttf", 15);
+    police = TTF_OpenFont("./data/fonts/font.ttf", 15);
     sprintf(mtext, "Press Start");
     sprintf(ntext, "Made By TsilaAllaoui");
     SDL_Rect mpos, npos;
@@ -332,7 +335,10 @@ void Tetris::set_tetris()
             if (event.key.keysym.sym == SDLK_SPACE)
                 start = true;
         }
-        SDL_Color mcolor = {rand()%256,rand()%256,rand()%256};
+        int random_red = rand()%256; 
+        int random_green = rand()%256; 
+        int random_blue = rand()%256; 
+        SDL_Color mcolor = {(uint8_t)random_red, (uint8_t)random_green, (uint8_t)random_blue};
         msurface = TTF_RenderText_Solid(police,mtext,mcolor);
         nsurface = TTF_RenderText_Solid(police,ntext,mcolor);
         SDL_BlitSurface(msurface,NULL,screen,&mpos);
