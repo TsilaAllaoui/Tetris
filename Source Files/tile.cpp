@@ -1,5 +1,7 @@
-#include "tile.h"
+#include <SDL3/SDL_image.h>
 #include <set>
+
+#include "tile.h"
 
 const int Tile::Size = 16;
 
@@ -13,12 +15,13 @@ Tile::Tile()
 
 Tile::Tile(float x, float y,Tile::Type type, SDL_Renderer* renderer)
 {
-    pos_.x = x;
-	pos_.y = y;
+    pos_.x = x * Tile::Size;
+	pos_.y = y * Tile::Size;
 	pos_.w = Tile::Size;
 	pos_.h = Tile::Size;
     type_ = type;
 	renderer_ = renderer;
+	texture_ = IMG_LoadTexture(renderer_, "./data/images/tile.png");
 }
 
 void Tile::move(const Tile::Direction &direction)
@@ -66,13 +69,13 @@ void Tile::show()
 
 SDL_FRect Tile::getPosition()
 {
-    return pos_;
+	return { pos_.x / 16, pos_.y / 16, pos_.w, pos_.h };
 }
 
 void Tile::set(float x ,float y)
 {
-    pos_.x = x;
-	pos_.y = y;
+    pos_.x = x * Tile::Size;
+	pos_.y = y * Tile::Size;
 }
 
 Tile::~Tile()

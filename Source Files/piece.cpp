@@ -1,568 +1,275 @@
 #include "piece.h"
+#include "tetris.h"
 
-Piece::Piece(float game_speed)
+Piece::Piece(const float&gameSpeed, SDL_Renderer* renderer)
 {
-    tried_to_swap = false;
-    state = 0;
-    timer.start();
-    active = true;
-    tact_speed = 10;
-    speed = game_speed;
-    buffer_speed = game_speed;
-    exchange = false;
+	// Setting up the renderer
+	renderer_ = renderer;
+
+	// Starting the timer
+    timer_.start();
+
+	// Set the piece activity state
+    active_ = true;
+
+	// Setting up the piece falling speed
+	speed_ = Tetris::gameSpeed * 1000;
+	tmpSpeed_ = Tetris::gameSpeed * 1000;
 }
 
-void Piece::update(vector<Tile> &block_list)
+Piece::~Piece()
 {
-    keyhandle(block_list);
-    if (timer.get_time() > speed)
-    {
-        if (!collide_down(block_list))
-        for (int i=0;i<(int)tile_list.size();i++)
-                tile_list[i].move_down();
-        timer.start();
-    }
+	// Freeing memory
+	tiles.clear();
+	timer_.stop();
+
+	// Unsetting attributes
+	active_ = false;
+	speed_ = 0;
+	tmpSpeed_ = 0;
 }
 
-void Piece::show(SDL_Surface *screen, SDL_Surface *sprite)
+void Piece::update()
 {
+	// Checking collision
+	checkCollision();
 
-       for (int i=0;i<tile_list.size();i++)
-           tile_list[i].show(screen,sprite);
+	// If timer exceed current speed, we move all tiles of the piece down
+	if (active_ && timer_.getTime() > speed_)
+	{
+		for (auto& tile : tiles)
+			tile->move(Tile::Direction::DOWNDIR);
+		timer_.start();
+	}
 }
 
-bool Piece::collide_left(vector<Tile> block_list)
+void Piece::show()
 {
-        if (tile_list[0].get_pos().x <= BLOC || collide_with_others(tile_list[0].get_pos(),block_list) == LEFT
-            || tile_list[1].get_pos().x <= BLOC || collide_with_others(tile_list[1].get_pos(),block_list) == LEFT
-            || tile_list[2].get_pos().x <= BLOC || collide_with_others(tile_list[2].get_pos(),block_list) == LEFT
-            ||tile_list[3].get_pos().x <= BLOC || collide_with_others(tile_list[3].get_pos(),block_list) == LEFT)
-            return true;
-    return false;
+	// SHowing all tiles
+	for (auto& tile : tiles)
+		tile->show();
 }
 
-bool Piece::collide_right(vector<Tile> block_list)
+bool Piece::isActive()
 {
-        if (tile_list[0].get_pos().x >= S_WIDHT || collide_with_others(tile_list[0].get_pos(),block_list) == RIGHT
-            || tile_list[1].get_pos().x >= S_WIDHT || collide_with_others(tile_list[1].get_pos(),block_list) == RIGHT
-            || tile_list[2].get_pos().x >= S_WIDHT || collide_with_others(tile_list[2].get_pos(),block_list) == RIGHT
-            ||tile_list[3].get_pos().x >= S_WIDHT || collide_with_others(tile_list[3].get_pos(),block_list) == RIGHT)
-            return true;
-    return false;
+	return active_;
 }
 
-bool Piece::collide_down(vector<Tile> block_list)
+void Piece::changeSpeed(const bool& increase)
 {
-    if (tile_list[0].get_pos().y == HEIGHT-2*BLOC || collide_with_others(tile_list[0].get_pos(),block_list) == DOWN
-        || tile_list[1].get_pos().y == HEIGHT-2*BLOC || collide_with_others(tile_list[1].get_pos(),block_list) == DOWN
-        || tile_list[2].get_pos().y == HEIGHT-2*BLOC || collide_with_others(tile_list[2].get_pos(),block_list) == DOWN
-        || tile_list[3].get_pos().y == HEIGHT-2*BLOC || collide_with_others(tile_list[3].get_pos(),block_list) == DOWN)
-    {
-        active = false;
-        return true;
-    }
-    return false;
+	if (increase)
+		speed_ = tmpSpeed_ / 25;
+	else speed_ = Tetris::gameSpeed * 1000 ;
 }
 
-int Piece::collide_with_others(SDL_Rect mpos,vector<Tile> block_list)
+/*********	SQUARE PIECE	**********/
+
+Square::Square(const float& gameSpeed, SDL_Renderer *renderer) : Piece(gameSpeed, renderer)
 {
-    for (int i=0;i<(int)block_list.size();i++)
-    {
-        if (mpos.y + BLOC >= block_list[i].get_pos().y && mpos.y + BLOC <= block_list[i].get_pos().y + BLOC && mpos.x == block_list[i].get_pos().x)
-            return DOWN;
-        if (mpos.x + BLOC >= block_list[i].get_pos().x && mpos.x + BLOC <= block_list[i].get_pos().x + BLOC && mpos.y == block_list[i].get_pos().y)
-            return RIGHT;
-        if (mpos.x <= block_list[i].get_pos().x + BLOC && mpos.x >= block_list[i].get_pos().x && mpos.y == block_list[i].get_pos().y)
-            return LEFT;
-    }
-    return NONE;
+	// Setting the type
+	type_ = Tile::Type::SQUARE;
+
+	tiles.emplace_back(new Tile(7, 0, Tile::Type::SQUARE, renderer_));
+	tiles.emplace_back(new Tile(7, 1, Tile::Type::SQUARE, renderer_));
+	tiles.emplace_back(new Tile(8, 0, Tile::Type::SQUARE, renderer_));
+	tiles.emplace_back(new Tile(8, 1, Tile::Type::SQUARE, renderer_));
 }
 
-bool Piece::is_active()
-{
-    return active;
-}
-
-int Piece::get_type()
-{
-    return type;
-}
-
-SDL_Rect Piece::get_tile(int n)
-{
-    return tile_list[n].get_pos();
-}
-
-vector<Tile> Piece::get_tile_list()
-{
-    return tile_list;
-}
-
-void Piece::keyhandle(vector<Tile> block_list)
-{
-    SDL_Event event;
-    if (SDL_PollEvent(&event))
-    {
-        if (event.type == SDL_KEYDOWN)
-        {
-            if (event.key.keysym.sym ==  SDLK_ESCAPE)
-                exit(EXIT_SUCCESS);
-            if (event.key.keysym.sym == SDLK_LEFT && active)
-                if (!collide_left(block_list))
-                    for (int i=0;i<(int)tile_list.size();i++)
-                       tile_list[i].move_left();
-            if (event.key.keysym.sym == SDLK_RIGHT && active)
-                if (!collide_right(block_list))
-                    for (int i=0;i<(int)tile_list.size();i++)
-                       tile_list[i].move_right();
-            if (event.key.keysym.sym == SDLK_SPACE)
-                rotate_piece(block_list);
-            if (event.key.keysym.sym == SDLK_DOWN)
-                speed = tact_speed;
-            if (event.key.keysym.sym == SDLK_s && !tried_to_swap)
-            {
-                exchange = true;
-                tried_to_swap = true;
-            }
-        }
-        if (event.type == SDL_KEYUP)
-        {
-            if (event.key.keysym.sym == SDLK_DOWN)
-                    speed = buffer_speed;
-        }
-    }
-}
-
-bool Piece::collide_when_rotating(SDL_Rect mpos,vector<Tile> block_list)
-{
-    for (int i=0;i<(int)block_list.size();i++)
-    {
-        SDL_Rect bpos = block_list[i].get_pos();
-        if (mpos.y == bpos.y && mpos.x == bpos.x)
-            return true;
-    }
-    return false;
-}
-
-bool Piece::test_rotation(vector<Tile> block_list)
-{
-   for (int i=0;i<(int)tile_list.size();i++)
-    {
-        if (tile_list[i].get_pos().x + BLOC > S_WIDHT || tile_list[i].get_pos().x < 0
-            || tile_list[i].get_pos().y + BLOC > HEIGHT - BLOC || collide_when_rotating(tile_list[i].get_pos(),block_list)
-            || tile_list[i].get_pos().y < BLOC)
-            return true;
-    }
-    return false;
-}
-
-bool Piece::get_exchange()
-{
-    return exchange;
-}
-
-void Piece::unset_exchange()
-{
-    exchange = false;
-}
-
-void Piece::lock_swap()
-{
-    tried_to_swap = true;
-}
-
-Square_piece::Square_piece(float game_speed):Piece(game_speed)
-{
-    type = SQUARE;
-    for (int i=0;i<=1;i++)
-    {
-        Tile tile((5+i)*BLOC,BLOC,SQUARE);
-        tile_list.push_back(tile);
-    }
-    for (int i=0;i<=1;i++)
-    {
-        Tile tile((5+i)*BLOC,2*BLOC,SQUARE);
-        tile_list.push_back(tile);
-    }
-}
-
-void Square_piece::rotate_piece(vector<Tile> block_list)
+void Square::rotatePiece()
 {
 
 }
 
-void Square_piece::set(float x,float y)
+void Square::move(const Tile::Direction& direction)
 {
-    tile_list[0].set(x,y);
-    tile_list[1].set(x+BLOC,y);
-    tile_list[2].set(x,y+BLOC);
-    tile_list[3].set(x+BLOC,y+BLOC);
+	if (!active_)
+		return;
+
+	if (direction == Tile::Direction::RIGHTDIR && tiles[2]->getPosition().x + 1 < Tetris::WIDTH / Tile::Size)
+	{
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x + 1, tile->getPosition().y);
+	}
+	else if (direction == Tile::Direction::LEFTDIR && tiles[0]->getPosition().x - 1 >= 0)
+	{
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
+	}
 }
 
-I_piece::I_piece(float game_speed):Piece(game_speed)
+bool Square::checkCollision()
 {
-    state = 1;
-    type = I;
-    for (int i=1;i<5;i++)
-    {
-        Tile tile(5*BLOC,i*BLOC,I);
-        tile_list.push_back(tile);
-    }
-}
-
-void I_piece::set(float x,float y)
-{
-    tile_list[0].set(x,y);
-    tile_list[1].set(x,y+BLOC);
-    tile_list[2].set(x,y+2*BLOC);
-    tile_list[3].set(x,y+3*BLOC);
-}
-
-void I_piece::rotate_piece(vector<Tile> block_list)
-{
-    vector<Tile> tmp;
-    tmp = tile_list;
-    if (state == 0)
-    {
-        tile_list[0].set(tile_list[2].get_pos().x,tile_list[2].get_pos().y - 2*BLOC);
-        for (int i=1;i<=3;i++)
-            tile_list[i].set(tile_list[0].get_pos().x,tile_list[0].get_pos().y + i*BLOC);
-        if (!test_rotation(block_list))
-        {
-            state = 1;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 1)
-    {
-        tile_list[0].set(tile_list[0].get_pos().x - 2*BLOC,tile_list[0].get_pos().y + 2*BLOC);
-        for (int i=1;i<=3;i++)
-            tile_list[i].set(tile_list[0].get_pos().x + i*BLOC,tile_list[0].get_pos().y);
-        if (!test_rotation(block_list))
-        {
-            state = 0;
-            return;
-        }
-        tile_list = tmp;
-    }
-}
-
-L_piece::L_piece(float game_speed):Piece(game_speed)
-{
-    type = L;
-    for (int i=0;i<=2;i++)
-    {
-        Tile tile((5+i)*BLOC,BLOC,L);
-        tile_list.push_back(tile);
-    }
-    Tile tile(5*BLOC,2*BLOC,L);
-    tile_list.push_back(tile);
-}
-
-void L_piece::set(float x,float y)
-{
-    tile_list[0].set(x,y);
-    tile_list[1].set(x+BLOC,y);
-    tile_list[2].set(x+2*BLOC,y);
-    tile_list[3].set(x,y+BLOC);
+	// If the piece is colliding on the downside
+	if (tiles[1]->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size || tiles[3]->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+	{
+		active_ = false;
+		return true;
+	}
 }
 
 
-void L_piece::rotate_piece(vector<Tile> block_list)
+/*********	I PIECE	**********/
+
+
+IShape::IShape(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
 {
-    vector<Tile> tmp;
-    tmp = tile_list;
-    if (state == 0)
-    {
-        tile_list[0].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y - BLOC);
-        tile_list[2].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y + BLOC);
-        tile_list[3].set(tile_list[0].get_pos().x - BLOC,tile_list[0].get_pos().y);
-        if (!test_rotation(block_list))
-        {
-            state = 1;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 1)
-    {
-        tile_list[2].set(tile_list[1].get_pos().x - BLOC,tile_list[1].get_pos().y);
-        tile_list[0].set(tile_list[1].get_pos().x + BLOC,tile_list[1].get_pos().y);
-        tile_list[3].set(tile_list[0].get_pos().x ,tile_list[0].get_pos().y - BLOC);
-        if (!test_rotation(block_list))
-        {
-            state = 2;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 2)
-    {
-        tile_list[2].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y - BLOC);
-        tile_list[0].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y + BLOC);
-        tile_list[3].set(tile_list[0].get_pos().x + BLOC,tile_list[0].get_pos().y);
-        if (!test_rotation(block_list))
-        {
-            state = 3;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 3)
-    {
-        tile_list[2].set(tile_list[1].get_pos().x + BLOC,tile_list[1].get_pos().y);
-        tile_list[0].set(tile_list[1].get_pos().x - BLOC,tile_list[1].get_pos().y);
-        tile_list[3].set(tile_list[0].get_pos().x,tile_list[0].get_pos().y + BLOC);
-        if (!test_rotation(block_list))
-        {
-            state = 0;
-            return;
-        }
-        tile_list = tmp;
-    }
+	// Setting the type
+	type_ = Tile::Type::I;
+
+	tiles.emplace_back(new Tile(7, 0, Tile::Type::I, renderer_));
+	tiles.emplace_back(new Tile(7, 1, Tile::Type::I, renderer_));
+	tiles.emplace_back(new Tile(7, 2, Tile::Type::I, renderer_));
+	tiles.emplace_back(new Tile(7, 3, Tile::Type::I, renderer_));
 }
 
-L_reverse_piece::L_reverse_piece(float game_speed):Piece(game_speed)
+void IShape::rotatePiece()
 {
-    type = LR;
-    for (int i=2;i>=0;i--)
-    {
-        Tile tile((5+i)*BLOC,BLOC,LR);
-        tile_list.push_back(tile);
-    }
-    Tile tile(7*BLOC,2*BLOC,LR);
-    tile_list.push_back(tile);
+	auto farTile = tiles[3]->getPosition();
+	auto firstTile = tiles[0]->getPosition();
+
+	if (farTile.y > firstTile.y && firstTile.x - 3 >= 0)
+	{
+		for (int i = 1; i < 4; i++)
+		{
+			tiles[i]->set(firstTile.x - i, firstTile.y);
+		}
+	}
+
+	else if (farTile.y < firstTile.y && firstTile.x + 3 < Tetris::WIDTH / Tile::Size)
+	{
+		for (int i = 1; i < 4; i++)
+		{
+			tiles[i]->set(firstTile.x + i, firstTile.y);
+		}
+	}
+
+	else if (farTile.x < firstTile.x && firstTile.y - 3 >= 0)
+	{
+		for (int i = 1; i < 4; i++)
+		{
+			tiles[i]->set(firstTile.x, firstTile.y - i);
+		}
+	}
+
+	else if (farTile.x > firstTile.x && firstTile.y + 3 < Tetris::HEIGHT / Tile::Size)
+	{
+		for (int i = 1; i < 4; i++)
+		{
+			tiles[i]->set(firstTile.x, firstTile.y + i);
+		}
+	}
 }
 
-void L_reverse_piece::set(float x,float y)
+
+void IShape::move(const Tile::Direction& direction)
 {
-    tile_list[0].set(x,y);
-    tile_list[1].set(x+BLOC,y);
-    tile_list[2].set(x+2*BLOC,y);
-    tile_list[3].set(x+2*BLOC,y+BLOC);
+	if (!active_)
+		return;
+
+	if (direction == Tile::Direction::RIGHTDIR && tiles[3]->getPosition().x + 1 < Tetris::WIDTH / Tile::Size)
+	{
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x + 1, tile->getPosition().y);
+	}
+	else if (direction == Tile::Direction::LEFTDIR && tiles[3]->getPosition().x - 1 >= 0)
+	{
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
+	}
 }
 
-void L_reverse_piece::rotate_piece(vector<Tile> block_list)
+bool IShape::checkCollision()
 {
-    vector<Tile> tmp;
-    tmp = tile_list;
-    if (state == 0)
-    {
-        tile_list[0].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y - BLOC);
-        tile_list[2].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y + BLOC);
-        tile_list[3].set(tile_list[0].get_pos().x + BLOC,tile_list[0].get_pos().y);
-        if (!test_rotation(block_list))
-        {
-            state = 1;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 1)
-    {
-        tile_list[2].set(tile_list[1].get_pos().x  + BLOC,tile_list[1].get_pos().y);
-        tile_list[0].set(tile_list[1].get_pos().x  - BLOC,tile_list[1].get_pos().y);
-        tile_list[3].set(tile_list[0].get_pos().x,tile_list[0].get_pos().y - BLOC);
-        if (!test_rotation(block_list))
-        {
-            state = 2;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 2)
-    {
-        tile_list[2].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y + BLOC);
-        tile_list[0].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y - BLOC);
-        tile_list[3].set(tile_list[2].get_pos().x - BLOC,tile_list[2].get_pos().y);
-        if (!test_rotation(block_list))
-        {
-            state = 3;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 3)
-    {
-        tile_list[2].set(tile_list[1].get_pos().x - BLOC,tile_list[1].get_pos().y);
-        tile_list[0].set(tile_list[1].get_pos().x + BLOC,tile_list[1].get_pos().y);
-        tile_list[3].set(tile_list[0].get_pos().x,tile_list[0].get_pos().y + BLOC);
-        if (!test_rotation(block_list))
-        {
-            state = 0;
-            return;
-        }
-        tile_list = tmp;
-    }
+	// If the piece is colliding on the downside
+	if (tiles[3]->getPosition().y + 1 >= Tetris::HEIGHT / Tile::Size || tiles[0]->getPosition().y + 1 >= Tetris::HEIGHT / Tile::Size)
+	{
+		active_ = false;
+		return true;
+	}
 }
 
-N_piece::N_piece(float game_speed):Piece(game_speed)
+
+/*********	L PIECE	**********/
+
+LShape::LShape(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
 {
-    type = N;
-    Tile tile(5*BLOC,2*BLOC,NR);
-    tile_list.push_back(tile);
-    Tile tile1(5*BLOC,BLOC,NR);
-    tile_list.push_back(tile1);
-    Tile tile2(4*BLOC,BLOC,NR);
-    tile_list.push_back(tile2);
-    Tile tile3(6*BLOC,2*BLOC,NR);
-    tile_list.push_back(tile3);
+	// Setting the type
+	type_ = Tile::Type::L;
+
+	tiles.emplace_back(new Tile(7, 0, Tile::Type::L, renderer_));
+	tiles.emplace_back(new Tile(7, 1, Tile::Type::L, renderer_));
+	tiles.emplace_back(new Tile(7, 2, Tile::Type::L, renderer_));
+	tiles.emplace_back(new Tile(8, 2, Tile::Type::L, renderer_));
 }
 
-void N_piece::set(float x,float y)
+void LShape::rotatePiece()
 {
-    tile_list[0].set(x,y);
-    tile_list[1].set(x,y-BLOC);
-    tile_list[2].set(x-BLOC,y-BLOC);
-    tile_list[3].set(x+BLOC,y);
+	auto farTile = tiles[3]->getPosition();
+	auto firstTile = tiles[0]->getPosition();
+	auto pivotTile = tiles[2]->getPosition();
+
+	if (firstTile.y < pivotTile.y && pivotTile.x + 3 < Tetris::WIDTH / Tile::Size)
+	{
+		tiles[0]->set(pivotTile.x + 2, pivotTile.y);
+		tiles[1]->set(pivotTile.x + 1, pivotTile.y);
+		tiles[3]->set(pivotTile.x, pivotTile.y + 1);
+	}
+
+	if (firstTile.x > pivotTile.x && pivotTile.y + 3 < Tetris::WIDTH / Tile::Size)
+	{
+		tiles[0]->set(pivotTile.x, pivotTile.y + 2);
+		tiles[1]->set(pivotTile.x, pivotTile.y + 1);
+		tiles[3]->set(pivotTile.x - 1, pivotTile.y);
+	}
+
+	/*else if (farTile.y < firstTile.y && firstTile.x + 3 < Tetris::WIDTH / Tile::Size)
+	{
+		for (int i = 1; i < 4; i++)
+		{
+			tiles[i]->set(firstTile.x + i, firstTile.y);
+		}
+	}
+
+	else if (farTile.x < firstTile.x && firstTile.y - 3 >= 0)
+	{
+		for (int i = 1; i < 4; i++)
+		{
+			tiles[i]->set(firstTile.x, firstTile.y - i);
+		}
+	}
+
+	else if (farTile.x > firstTile.x && firstTile.y + 3 < Tetris::HEIGHT / Tile::Size)
+	{
+		for (int i = 1; i < 4; i++)
+		{
+			tiles[i]->set(firstTile.x, firstTile.y + i);
+		}
+	}*/
 }
 
-void N_piece::rotate_piece(vector<Tile> block_list)
+void LShape::move(const Tile::Direction& direction)
 {
-    vector<Tile> tmp;
-    tmp = tile_list;
-    if (state == 0)
-    {
-        tile_list[3].set(tile_list[2].get_pos().x,tile_list[2].get_pos().y + BLOC);
-        tile_list[0].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y - BLOC);
-        if (!test_rotation(block_list))
-        {
-            state = 1;
-            return;
-        }
-        tile_list = tmp;
+	if (!active_)
+		return;
 
-    }
-    else if (state == 1)
-    {
-        tile_list[0].set(tile_list[1].get_pos().x,tile_list[1].get_pos().y + BLOC);
-        tile_list[3].set(tile_list[0].get_pos().x + BLOC,tile_list[0].get_pos().y);
-        if (!test_rotation(block_list))
-        {
-            state = 0;
-            return;
-        }
-        tile_list = tmp;
-    }
+	if (direction == Tile::Direction::RIGHTDIR && tiles[3]->getPosition().x + 1 < Tetris::WIDTH / Tile::Size)
+	{
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x + 1, tile->getPosition().y);
+	}
+	else if (direction == Tile::Direction::LEFTDIR && tiles[0]->getPosition().x - 1 >= 0)
+	{
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
+	}
 }
 
-N_reverse_piece::N_reverse_piece(float game_speed):Piece(game_speed)
+bool LShape::checkCollision()
 {
-    type = NR;
-    Tile tile(5*BLOC,2*BLOC,N);
-    tile_list.push_back(tile);
-    Tile tile1(5*BLOC,BLOC,N);
-    tile_list.push_back(tile1);
-    Tile tile2(6*BLOC,BLOC,N);
-    tile_list.push_back(tile2);
-    Tile tile3(4*BLOC,2*BLOC,N);
-    tile_list.push_back(tile3);
-}
-
-void N_reverse_piece::set(float x,float y)
-{
-    tile_list[0].set(x,y);
-    tile_list[1].set(x,y-BLOC);
-    tile_list[3].set(x-BLOC,y);
-    tile_list[2].set(x+BLOC,y-BLOC);
-}
-
-void N_reverse_piece::rotate_piece(vector<Tile> block_list)
-{
-    vector<Tile> tmp;
-    tmp = tile_list;
-    if (state == 0)
-    {
-        tile_list[3].set(tile_list[2].get_pos().x,tile_list[2].get_pos().y + BLOC);
-        tile_list[0].set(tile_list[1].get_pos().x ,tile_list[1].get_pos().y - BLOC);
-        if (!test_rotation(block_list))
-        {
-            state = 1;
-            return;
-        }
-        tile_list = tmp;
-
-    }
-    else if (state == 1)
-    {
-        tile_list[0].set(tile_list[1].get_pos().x,tile_list[1].get_pos().y + BLOC);
-        tile_list[3].set(tile_list[0].get_pos().x - BLOC,tile_list[0].get_pos().y);
-        if (!test_rotation(block_list))
-        {
-            state = 0;
-            return;
-        }
-        tile_list = tmp;
-    }
-}
-
-T_piece::T_piece(float game_speed):Piece(game_speed)
-{
-    type = T;
-    Tile tile(5*BLOC,2*BLOC,T);
-    tile_list.push_back(tile);
-    Tile tile1(5*BLOC,BLOC,T);
-    tile_list.push_back(tile1);
-    Tile tile2(6*BLOC,2*BLOC,T);
-    tile_list.push_back(tile2);
-    Tile tile3(4*BLOC,2*BLOC,T);
-    tile_list.push_back(tile3);
-
-}
-
-void T_piece::set(float x,float y)
-{
-    tile_list[0].set(x,y);
-    tile_list[1].set(x,y-BLOC);
-    tile_list[2].set(x-BLOC,y);
-    tile_list[3].set(x+BLOC,y);
-}
-
-void T_piece::rotate_piece(vector<Tile> block_list)
-{
-    vector<Tile> tmp;
-    tmp = tile_list;
-    if (state == 0)
-    {
-        tile_list[3].set(tile_list[0].get_pos().x ,tile_list[0].get_pos().y + BLOC);
-        if (!test_rotation(block_list))
-        {
-            state = 1;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 1)
-    {
-        tile_list[1].set(tile_list[0].get_pos().x - BLOC,tile_list[0].get_pos().y);
-        if (!test_rotation(block_list))
-        {
-            state = 2;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 2)
-    {
-        tile_list[2].set(tile_list[0].get_pos().x ,tile_list[0].get_pos().y - BLOC);
-        if (!test_rotation(block_list))
-        {
-            state = 3;
-            return;
-        }
-        tile_list = tmp;
-    }
-    else if (state == 3)
-    {
-        tile_list[1].set(tile_list[0].get_pos().x,tile_list[0].get_pos().y - BLOC);
-        tile_list[3].set(tile_list[0].get_pos().x - BLOC,tile_list[0].get_pos().y);
-        tile_list[2].set(tile_list[0].get_pos().x + BLOC,tile_list[0].get_pos().y);
-        if (!test_rotation(block_list))
-        {
-            state = 0;
-            return;
-        }
-        tile_list = tmp;
-    }
+	// If the piece is colliding on the downside
+	if (tiles[1]->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size || tiles[3]->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+	{
+		active_ = false;
+		return true;
+	}
 }

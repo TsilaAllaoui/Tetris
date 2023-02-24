@@ -130,11 +130,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source Files\main.cpp" />
+    <ClCompile Include="Source Files\piece.cpp" />
     <ClCompile Include="Source Files\tetris.cpp" />
     <ClCompile Include="Source Files\tile.cpp" />
     <ClCompile Include="Source Files\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Header Files\piece.h" />
     <ClInclude Include="Header Files\tetris.h" />
     <ClInclude Include="Header Files\tile.h" />
     <ClInclude Include="Header Files\timer.h" />

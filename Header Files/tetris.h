@@ -3,7 +3,7 @@
 #include <SDL3/SDL.h>
 #include "timer.h"
 #include "tile.h"
-//#include "piece.h"
+#include "piece.h"
 
 // Tetris game class
 class Tetris
@@ -22,17 +22,14 @@ class Tetris
 		// The current score
         int CurrentScore;
 
-		//  The current game speed
-        float gameSpeed;
-
 		// The position of sprites
         SDL_FRect pos_b;
 
-		/*
-        Piece *curr_piece, *next_piece, *stock_piece, *UI_piece, *UI_stock_piece;
-        vector<Tile> block_list, tmp;
-        TTF_Font *police;
-		*/
+		// All pieces of the tetris game
+		std::vector<Piece*> pieces;
+
+		// The active Piece
+		Piece* activePiece;
 
     public:
 
@@ -51,6 +48,7 @@ class Tetris
 		// Useful constants
 		static const int WIDTH, HEIGHT, S_WIDTH, FPS_CAP;
 
+		static int gameSpeed;
 
 		/**
 		*\ brief Begin the Tetris game
@@ -77,50 +75,14 @@ class Tetris
         bool isGameOver();
 
 		/**
-		*\ brief Erase all possible lines
-		*\ return
-		*/
-        void erasePossibleLines();
-
-		/**
-		*\ brief Erase an element at a given position
-		*\ param mpos The position of the element to be erased
-		*\ return
-		*/
-        void eraseElement(SDL_Rect mpos);
-
-		/**
-		*\ brief Show current Piece in the UI
-		*\ return
-		*/
-        void showUiPiece();
-
-		/**
-		*\ brief Show stocked Piece
-		*\ return
-		*/
-        void showStockedPiece();
-
-		/**
-		*\ brief Show game UI
-		*\ return
-		*/
-        void showUI();
-
-		/**
 		*\ brief Init Tetris game
 		*\ return
 		*/
         void init();
 
 		/**
-		*\ brief End Tetris game
+		*\ brief For handling key events
 		*\ return
 		*/
-        bool stop();
-        /*
-        int get_score_long();
-		bool is_at(float mx,float my);
-		Piece* gen_next_Piece();
-		*/
+		void handleKey();
 };

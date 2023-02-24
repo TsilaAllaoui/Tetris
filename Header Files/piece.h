@@ -1,40 +1,39 @@
 #pragma once
 
+#include "timer.h"
 #include "tile.h"
-//#include <SDL/SDL_ttf.h>
+#include <SDL3/SDL.h>
 
 // Piece class
 class Piece
 {
     protected:
-		// The texture of the piece
-		SDL_Texture* texture_;
-
 		// The renderer
 		SDL_Renderer* renderer_;
 
 		// List of tiles composing the piece
-        std::vector<Tile> tiles;
+        std::vector<Tile*> tiles;
 
 		// Piece timer
-        Timer timer;
+        Timer timer_;
 
 		// Piece status
-        bool active, exchange, triedToSwap;
+		bool active_;
 
 		// Piece type
-        int state,type;
+        int type_;
 
 		// Piece speeds
-        float speed, buffer_speed, tact_speed;
+		float speed_, tmpSpeed_;
     
 	public:
 		/**
 		*\ brief Constructor
 		*\ param gameSpeed The current speed of the game
+		*\ param renderer The renderer
 		*\ return
 		*/
-        Piece(float gameSpeed);
+        Piece(const float& gameSpeed, SDL_Renderer* renderer);
 
 		/**
 		*\ brief Destrcutor
@@ -47,7 +46,7 @@ class Piece
 		*\ param tiles The list of tiles composing the piece
 		*\ return
 		*/
-        void update(std::vector<Tile> &tiles);
+        void update();
         
 		/**
 		*\ brief Render piece on window
@@ -56,63 +55,66 @@ class Piece
 		void show();
 
 		/**
-		*\ brief R Set the position of the piece
-		*\ free Need to be overrided
+		*\ brief Getter for active attribute
 		*\ return
 		*/
-        virtual void set(float x,float y) = 0;
+		bool isActive();
+
+		/**
+		*\ brief Increase/Decrease speed of piece
+		*\ param inscrease If true increase, decrease in the opposite effect
+		*\ return
+		*/
+		void changeSpeed(const bool& increase);
 
 		/**
 		*\ brief R Set the position of the piece
+		*\ param direction The direction where to move the piece
 		*\ free Need to be overrided
 		*\ return
 		*/
-        bool collide_left(std::vector<Tile> block_list);
-        bool collide_right(std::vector<Tile> block_list);
-        bool collide_down(std::vector<Tile> block_list);
-        int collide_with_others(SDL_Rect mpos,std::vector<Tile> block_list);
-        bool collide_when_rotating(SDL_Rect mpos,std::vector<Tile> block_list);
+        virtual void move(const Tile::Direction& direction ) = 0;
 
 		/**
-		*\ brief R Set the position of the piece
+		*\ brief Rotate the piece
 		*\ free Need to be overrided
 		*\ return
 		*/
-        bool canRotate(std::vector<Tile>& tiles);
-        bool is_active();
-        SDL_Rect get_tile(int n);
-        std::vector<Tile> get_tile_list();
-        void keyhandle(std::vector<Tile> block_list);
-        virtual void rotate_piece(std::vector<Tile> block_list) = 0;
-        int get_type();
-        bool get_exchange();
-        void unset_exchange();
-        void set_type();
-        void lock_swap();
+		virtual void rotatePiece() = 0;
+
+		/**
+		*\ brief For checking collision
+		*\ free Need to be overrided
+		*\ return
+		*/
+		virtual bool checkCollision() = 0;
 };
 
-class Square_piece:public Piece
+class Square:public Piece
 {
     public:
-        Square_piece(float game_speed);
-        virtual void rotate_piece(std::vector<Tile> block_list);
-        virtual void set(float x,float y);
+		Square(const float& gameSpeed, SDL_Renderer *renderer);
+        void rotatePiece() override;
+        void move(const Tile::Direction& direction) override;
+		bool checkCollision() override;
 };
 
-class I_piece:public Piece
+class IShape:public Piece
 {
     public:
-        I_piece(float game_speed);
-        virtual void rotate_piece(std::vector<Tile> block_list);
-        virtual void set(float x,float y);
+		IShape(const float& gameSpeed, SDL_Renderer* renderer);
+		void rotatePiece() override;
+		void move(const Tile::Direction& direction) override;
+		bool checkCollision() override;
 };
 
-class L_piece:public Piece
+class LShape:public Piece
 {
     public:
-        L_piece(float game_speed);
-        virtual void rotate_piece(std::vector<Tile> block_list);
-        virtual void set(float x,float y);
+		LShape(const float& gameSpeed, SDL_Renderer* renderer);
+		void rotatePiece() override;
+		void move(const Tile::Direction& direction) override;
+		bool checkCollision() override;
 };
 
 class L_reverse_piece:public Piece
