@@ -99,11 +99,14 @@ void Square::move(const Tile::Direction& direction)
 
 bool Square::checkCollision()
 {
-	// If the piece is colliding on the downside
-	if (tiles[1]->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size || tiles[3]->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+	// If one the tile of the piece is collidingde
+	for (auto& tile : tiles)
 	{
-		active_ = false;
-		return true;
+		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+		{
+			active_ = false;
+			return true;
+		}
 	}
 }
 
@@ -180,11 +183,14 @@ void IShape::move(const Tile::Direction& direction)
 
 bool IShape::checkCollision()
 {
-	// If the piece is colliding on the downside
-	if (tiles[3]->getPosition().y + 1 >= Tetris::HEIGHT / Tile::Size || tiles[0]->getPosition().y + 1 >= Tetris::HEIGHT / Tile::Size)
+	// If one the tile of the piece is collidingde
+	for (auto& tile : tiles)
 	{
-		active_ = false;
-		return true;
+		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+		{
+			active_ = false;
+			return true;
+		}
 	}
 }
 
@@ -204,47 +210,36 @@ LShape::LShape(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed
 
 void LShape::rotatePiece()
 {
-	auto farTile = tiles[3]->getPosition();
 	auto firstTile = tiles[0]->getPosition();
 	auto pivotTile = tiles[2]->getPosition();
 
-	if (firstTile.y < pivotTile.y && pivotTile.x + 3 < Tetris::WIDTH / Tile::Size)
+	if (firstTile.y < pivotTile.y && pivotTile.x + 2 < Tetris::WIDTH / Tile::Size && pivotTile.y + 1 < Tetris::HEIGHT / Tile::Size)
 	{
 		tiles[0]->set(pivotTile.x + 2, pivotTile.y);
 		tiles[1]->set(pivotTile.x + 1, pivotTile.y);
 		tiles[3]->set(pivotTile.x, pivotTile.y + 1);
 	}
 
-	if (firstTile.x > pivotTile.x && pivotTile.y + 3 < Tetris::WIDTH / Tile::Size)
+	else if (firstTile.x > pivotTile.x && pivotTile.y + 2 < Tetris::HEIGHT / Tile::Size && pivotTile.x - 1 >= 0)
 	{
 		tiles[0]->set(pivotTile.x, pivotTile.y + 2);
 		tiles[1]->set(pivotTile.x, pivotTile.y + 1);
 		tiles[3]->set(pivotTile.x - 1, pivotTile.y);
 	}
 
-	/*else if (farTile.y < firstTile.y && firstTile.x + 3 < Tetris::WIDTH / Tile::Size)
+	else if (firstTile.y > pivotTile.y && pivotTile.x - 2 >= 0 && pivotTile.y - 1  >= 0)
 	{
-		for (int i = 1; i < 4; i++)
-		{
-			tiles[i]->set(firstTile.x + i, firstTile.y);
-		}
+		tiles[0]->set(pivotTile.x - 2, pivotTile.y);
+		tiles[1]->set(pivotTile.x - 1, pivotTile.y);
+		tiles[3]->set(pivotTile.x, pivotTile.y - 1);
 	}
 
-	else if (farTile.x < firstTile.x && firstTile.y - 3 >= 0)
+	else if (firstTile.x < pivotTile.x && pivotTile.y - 2 >= 0 && pivotTile.x + 1 < Tetris::WIDTH / Tile::Size)
 	{
-		for (int i = 1; i < 4; i++)
-		{
-			tiles[i]->set(firstTile.x, firstTile.y - i);
-		}
+		tiles[0]->set(pivotTile.x, pivotTile.y - 2);
+		tiles[1]->set(pivotTile.x, pivotTile.y - 1);
+		tiles[3]->set(pivotTile.x + 1, pivotTile.y);
 	}
-
-	else if (farTile.x > firstTile.x && firstTile.y + 3 < Tetris::HEIGHT / Tile::Size)
-	{
-		for (int i = 1; i < 4; i++)
-		{
-			tiles[i]->set(firstTile.x, firstTile.y + i);
-		}
-	}*/
 }
 
 void LShape::move(const Tile::Direction& direction)
@@ -255,10 +250,20 @@ void LShape::move(const Tile::Direction& direction)
 	if (direction == Tile::Direction::RIGHTDIR && tiles[3]->getPosition().x + 1 < Tetris::WIDTH / Tile::Size)
 	{
 		for (auto& tile : tiles)
+		{
+			if (tile->getPosition().x + 1 < 0)
+				return;
+		}
+		for (auto& tile : tiles)
 			tile->set(tile->getPosition().x + 1, tile->getPosition().y);
 	}
-	else if (direction == Tile::Direction::LEFTDIR && tiles[0]->getPosition().x - 1 >= 0)
+	else if (direction == Tile::Direction::LEFTDIR)// && tiles[0]->getPosition().x - 1 >= 0)
 	{
+		for (auto& tile : tiles)
+		{
+			if (tile->getPosition().x - 1 < 0)
+				return;
+		}
 		for (auto& tile : tiles)
 			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
 	}
@@ -266,10 +271,100 @@ void LShape::move(const Tile::Direction& direction)
 
 bool LShape::checkCollision()
 {
-	// If the piece is colliding on the downside
-	if (tiles[1]->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size || tiles[3]->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+	// If one the tile of the piece is collidingde
+	for (auto& tile : tiles)
 	{
-		active_ = false;
-		return true;
+		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+		{
+			active_ = false;
+			return true;
+		}
+	}
+}
+
+/*********	L REVERSE PIECE	**********/
+
+LReverseShape::LReverseShape(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
+{
+	// Setting the type
+	type_ = Tile::Type::L;
+
+	tiles.emplace_back(new Tile(8, 0, Tile::Type::LR, renderer_));
+	tiles.emplace_back(new Tile(8, 1, Tile::Type::LR, renderer_));
+	tiles.emplace_back(new Tile(8, 2, Tile::Type::LR, renderer_));
+	tiles.emplace_back(new Tile(7, 2, Tile::Type::LR, renderer_));
+}
+
+void LReverseShape::rotatePiece()
+{
+	auto firstTile = tiles[0]->getPosition();
+	auto pivotTile = tiles[2]->getPosition();
+
+	if (firstTile.y < pivotTile.y && pivotTile.x + 2 < Tetris::WIDTH / Tile::Size && pivotTile.y - 1 >= 0)
+	{
+		tiles[0]->set(pivotTile.x + 2, pivotTile.y);
+		tiles[1]->set(pivotTile.x + 1, pivotTile.y);
+		tiles[3]->set(pivotTile.x, pivotTile.y - 1);
+	}
+
+	else if (firstTile.x > pivotTile.x && pivotTile.y + 2 < Tetris::HEIGHT / Tile::Size && pivotTile.x + 1 < Tetris::WIDTH / Tile::Size)
+	{
+		tiles[0]->set(pivotTile.x, pivotTile.y + 2);
+		tiles[1]->set(pivotTile.x, pivotTile.y + 1);
+		tiles[3]->set(pivotTile.x + 1, pivotTile.y);
+	}
+
+	else if (firstTile.y > pivotTile.y && pivotTile.x - 2 >= 0 && pivotTile.y + 1 < Tetris::WIDTH / Tile::Size)
+	{
+		tiles[0]->set(pivotTile.x - 2, pivotTile.y);
+		tiles[1]->set(pivotTile.x - 1, pivotTile.y);
+		tiles[3]->set(pivotTile.x, pivotTile.y + 1);
+	}
+
+	else if (firstTile.x < pivotTile.x && pivotTile.y - 2 >= 0 && pivotTile.x - 1 >= 0)
+	{
+		tiles[0]->set(pivotTile.x, pivotTile.y - 2);
+		tiles[1]->set(pivotTile.x, pivotTile.y - 1);
+		tiles[3]->set(pivotTile.x - 1, pivotTile.y);
+	}
+}
+
+void LReverseShape::move(const Tile::Direction& direction)
+{
+	if (!active_)
+		return;
+
+	if (direction == Tile::Direction::RIGHTDIR && tiles[3]->getPosition().x + 1 < Tetris::WIDTH / Tile::Size)
+	{
+		for (auto& tile : tiles)
+		{
+			if (tile->getPosition().x + 1 < 0)
+				return;
+		}
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x + 1, tile->getPosition().y);
+	}
+	else if (direction == Tile::Direction::LEFTDIR)// && tiles[0]->getPosition().x - 1 >= 0)
+	{
+		for (auto& tile : tiles)
+		{
+			if (tile->getPosition().x - 1 < 0)
+				return;
+		}
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
+	}
+}
+
+bool LReverseShape::checkCollision()
+{
+	// If one the tile of the piece is collidingde
+	for (auto& tile : tiles)
+	{
+		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+		{
+			active_ = false;
+			return true;
+		}
 	}
 }

@@ -1,0 +1,9 @@
+﻿  piece.cpp
+d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(16): warning C4244: '=' : conversion de 'int' en 'float', perte possible de données
+d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(17): warning C4244: '=' : conversion de 'int' en 'float', perte possible de données
+d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(62): warning C4244: '=' : conversion de 'int' en 'float', perte possible de données
+d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(111): warning C4715: 'Square::checkCollision' : les chemins de contrôle ne retournent pas tous une valeur
+d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(195): warning C4715: 'IShape::checkCollision' : les chemins de contrôle ne retournent pas tous une valeur
+d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(283): warning C4715: 'LShape::checkCollision' : les chemins de contrôle ne retournent pas tous une valeur
+d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(370): warning C4715: 'LReverseShape::checkCollision' : les chemins de contrôle ne retournent pas tous une valeur
+  Tetris.vcxproj -> D:\FIT_Apprenti_Vague_006\Tetris\x64\Debug\Tetris.exe

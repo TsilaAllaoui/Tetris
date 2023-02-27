@@ -67,6 +67,11 @@ void Tile::show()
 	SDL_RenderTexture(renderer_, texture_, &mpos, &pos_);
 }
 
+bool Tile::isColliding()
+{
+	return false;
+}
+
 SDL_FRect Tile::getPosition()
 {
 	return { pos_.x / 16, pos_.y / 16, pos_.w, pos_.h };

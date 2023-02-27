@@ -117,12 +117,13 @@ class LShape:public Piece
 		bool checkCollision() override;
 };
 
-class L_reverse_piece:public Piece
+class LReverseShape:public Piece
 {
     public:
-        L_reverse_piece(float game_speed);
-        virtual void rotate_piece(std::vector<Tile> block_list);
-        virtual void set(float x,float y);
+		LReverseShape(const float& gameSpeed, SDL_Renderer* renderer);
+		void rotatePiece() override;
+		void move(const Tile::Direction& direction) override;
+		bool checkCollision() override;
 };
 
 class N_piece:public Piece

@@ -70,4 +70,9 @@ class Tile
 		*\ return
 		*/
 		void show();
+
+		/** brief Check collision of the tile
+		*\ return true if there is collision
+		*/
+		bool isColliding();
 };
