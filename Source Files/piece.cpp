@@ -408,9 +408,9 @@ void N_piece::move(const Tile::Direction& direction)
 
 	if (direction == Tile::Direction::RIGHTDIR && tiles[3]->getPosition().x + 1 < Tetris::WIDTH / Tile::Size)
 	{
-		auto p = tiles[2]->getPosition().x;
-		if (tiles[2]->getPosition().x + 1 >= Tetris::WIDTH / Tile::Size)
-			return;
+		for (auto& tile : tiles)
+			if (tile->getPosition().x + 1 >= Tetris::WIDTH / Tile::Size)
+				return;
 		for (auto& tile : tiles)
 			tile->set(tile->getPosition().x + 1, tile->getPosition().y);
 	}
@@ -427,6 +427,77 @@ void N_piece::move(const Tile::Direction& direction)
 }
 
 bool N_piece::checkCollision()
+{
+	// If one the tile of the piece is collidingde
+	for (auto& tile : tiles)
+	{
+		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+		{
+			active_ = false;
+			return true;
+		}
+	}
+}
+
+
+/*********	N REVERSE PIECE	**********/
+
+N_reverse_piece::N_reverse_piece(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
+{
+	// Setting the type
+	type_ = Tile::Type::NR;
+
+	tiles.emplace_back(new Tile(8, 1, Tile::Type::NR, renderer_));
+	tiles.emplace_back(new Tile(8, 2, Tile::Type::NR, renderer_));
+	tiles.emplace_back(new Tile(7, 2, Tile::Type::NR, renderer_));
+	tiles.emplace_back(new Tile(7, 3, Tile::Type::NR, renderer_));
+}
+
+void N_reverse_piece::rotatePiece()
+{
+	auto firstTile = tiles[0]->getPosition();
+	auto pivotTile = tiles[1]->getPosition();
+
+	if (firstTile.y < pivotTile.y && tiles[3]->getPosition().x + 2 < Tetris::WIDTH / Tile::Size)
+	{
+		tiles[0]->set(pivotTile.x, pivotTile.y + 1);
+		tiles[3]->set(pivotTile.x + 1, pivotTile.y + 1);
+	}
+
+	else if (firstTile.y >= pivotTile.y)
+	{
+		tiles[0]->set(pivotTile.x, pivotTile.y - 1);
+		tiles[3]->set(pivotTile.x - 1, pivotTile.y + 1);
+	}
+}
+
+void N_reverse_piece::move(const Tile::Direction& direction)
+{
+	if (!active_)
+		return;
+
+	if (direction == Tile::Direction::RIGHTDIR && tiles[3]->getPosition().x + 1 < Tetris::WIDTH / Tile::Size)
+	{
+		auto p = tiles[2]->getPosition().x;
+		for (auto& tile : tiles)
+			if (tile->getPosition().x + 1 >= Tetris::WIDTH / Tile::Size)
+				return;
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x + 1, tile->getPosition().y);
+	}
+	else if (direction == Tile::Direction::LEFTDIR)
+	{
+		for (auto& tile : tiles)
+		{
+			if (tile->getPosition().x - 1 < 0)
+				return;
+		}
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
+	}
+}
+
+bool N_reverse_piece::checkCollision()
 {
 	// If one the tile of the piece is collidingde
 	for (auto& tile : tiles)
