@@ -129,23 +129,24 @@ class LReverseShape:public Piece
 class N_piece:public Piece
 {
     public:
-        N_piece(float game_speed);
-        virtual void rotate_piece(std::vector<Tile> block_list);
-        virtual void set(float x,float y);
+        N_piece(const float& game_speed, SDL_Renderer* renderer);
+        void rotatePiece() override;
+		void move(const Tile::Direction& direction) override;
+		bool checkCollision() override;
 };
 
-class N_reverse_piece:public Piece
-{
-    public:
-        N_reverse_piece(float game_speed);
-        virtual void rotate_piece(std::vector<Tile> block_list);
-        virtual void set(float x,float y);
-};
-
-class T_piece:public Piece
-{
-    public:
-        T_piece(float game_speed);
-        virtual void rotate_piece(std::vector<Tile> block_list);
-        virtual void set(float x,float y);
-};
+//class N_reverse_piece:public Piece
+//{
+//    public:
+//        N_reverse_piece(float game_speed);
+//        virtual void rotate_piece(std::vector<Tile> block_list);
+//        virtual void set(float x,float y);
+//};
+//
+//class T_piece:public Piece
+//{
+//    public:
+//        T_piece(float game_speed);
+//        virtual void rotate_piece(std::vector<Tile> block_list);
+//        virtual void set(float x,float y);
+//};
