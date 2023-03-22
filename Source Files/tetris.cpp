@@ -77,7 +77,7 @@ void Tetris::play()
 void Tetris::init()
 {
 	// Creating the first piece and make it as the active piece
-	activePiece = new N_reverse_piece(0.5, renderer_);
+	activePiece = new T_piece(0.5, renderer_);
 }
 
 void Tetris::update()

@@ -509,3 +509,80 @@ bool N_reverse_piece::checkCollision()
 		}
 	}
 }
+
+
+/*********	T PIECE	**********/
+
+T_piece::T_piece(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
+{
+	// Setting the type
+	type_ = Tile::Type::T;
+
+	tiles.emplace_back(new Tile(7, 2, Tile::Type::T, renderer_));
+	tiles.emplace_back(new Tile(8, 2, Tile::Type::T, renderer_));
+	tiles.emplace_back(new Tile(9, 2, Tile::Type::T, renderer_));
+	tiles.emplace_back(new Tile(8, 1, Tile::Type::T, renderer_));
+}
+
+void T_piece::rotatePiece()
+{
+	auto firstTile = tiles[0]->getPosition();
+	auto pivotTile = tiles[1]->getPosition();
+
+	if (firstTile.x < pivotTile.x && tiles[3]->getPosition().y < pivotTile.y && pivotTile.y + 1 < Tetris::HEIGHT / Tile::Size)
+		tiles[0]->set(pivotTile.x, pivotTile.y + 1);
+
+	else if (firstTile.y > pivotTile.y && tiles[3]->getPosition().y < pivotTile.y && pivotTile.x - 1 >= 0)
+	{
+		tiles[0]->set(pivotTile.x - 1, pivotTile.y);
+		tiles[3]->set(pivotTile.x, pivotTile.y + 1);
+	}
+
+	else if (firstTile.y == pivotTile.y && tiles[3]->getPosition().y > pivotTile.y && tiles[2]->getPosition().y == pivotTile.y && pivotTile.y - 1 >= 0)
+		tiles[2]->set(pivotTile.x, pivotTile.y - 1);	
+
+	else if (tiles[3]->getPosition().y > pivotTile.y && tiles[2]->getPosition().y < pivotTile.y && pivotTile.x + 1 < Tetris::HEIGHT / Tile::Size)
+	{
+		tiles[2]->set(pivotTile.x + 1, pivotTile.y);
+		tiles[3]->set(pivotTile.x, pivotTile.y - 1);
+	}
+}
+
+void T_piece::move(const Tile::Direction& direction)
+{
+	if (!active_)
+		return;
+
+	if (direction == Tile::Direction::RIGHTDIR && tiles[3]->getPosition().x + 1 < Tetris::WIDTH / Tile::Size)
+	{
+		auto p = tiles[2]->getPosition().x;
+		for (auto& tile : tiles)
+			if (tile->getPosition().x + 1 >= Tetris::WIDTH / Tile::Size)
+				return;
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x + 1, tile->getPosition().y);
+	}
+	else if (direction == Tile::Direction::LEFTDIR)
+	{
+		for (auto& tile : tiles)
+		{
+			if (tile->getPosition().x - 1 < 0)
+				return;
+		}
+		for (auto& tile : tiles)
+			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
+	}
+}
+
+bool T_piece::checkCollision()
+{
+	// If one the tile of the piece is collidingde
+	for (auto& tile : tiles)
+	{
+		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+		{
+			active_ = false;
+			return true;
+		}
+	}
+}

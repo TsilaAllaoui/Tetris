@@ -8,4 +8,5 @@ d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(283): warning C4715: 'LS
 d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(370): warning C4715: 'LReverseShape::checkCollision' : les chemins de contrôle ne retournent pas tous une valeur
 d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(440): warning C4715: 'N_piece::checkCollision' : les chemins de contrôle ne retournent pas tous une valeur
 d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(511): warning C4715: 'N_reverse_piece::checkCollision' : les chemins de contrôle ne retournent pas tous une valeur
+d:\fit_apprenti_vague_006\tetris\source files\piece.cpp(588): warning C4715: 'T_piece::checkCollision' : les chemins de contrôle ne retournent pas tous une valeur
   Tetris.vcxproj -> D:\FIT_Apprenti_Vague_006\Tetris\x64\Debug\Tetris.exe
