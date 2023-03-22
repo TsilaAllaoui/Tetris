@@ -77,7 +77,9 @@ void Tetris::play()
 void Tetris::init()
 {
 	// Creating the first piece and make it as the active piece
-	activePiece = new T_piece(0.5, renderer_);
+	Piece *piece = generateRandomPiece();
+	pieces_.emplace_back(piece);
+	activePiece = pieces_.at(pieces_.size() - 1);
 }
 
 void Tetris::update()
@@ -86,7 +88,18 @@ void Tetris::update()
 	handleKey();
 
 	// Moving active piece down
-	//activePiece->update();
+	activePiece->update(tiles_);
+
+	// Check if current piece is colliding underneath
+	if (!activePiece->isActive())
+	{
+		auto currentTiles = activePiece->getTiles();
+		for (auto& tile : currentTiles)
+			tiles_.emplace_back(tile);
+		Piece* piece = generateRandomPiece();
+		pieces_.emplace_back(piece);
+		activePiece = pieces_.at(pieces_.size() - 1);
+	}
 }
 
 void Tetris::show()
@@ -95,8 +108,9 @@ void Tetris::show()
 	SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
 	SDL_RenderClear(renderer_);
 
-	// Showing active piece
-	activePiece->show();
+	// Showing pieces
+	for (auto& piece : pieces_)
+		piece->show();
 
 	// Updating window
 	SDL_RenderPresent(renderer_);
@@ -104,6 +118,8 @@ void Tetris::show()
 
 bool Tetris::isGameOver()
 {
+	if (activePiece->isCollidingUp())
+		return true;
 	return false;
 }
 
@@ -144,4 +160,23 @@ void Tetris::handleKey()
 				activePiece->changeSpeed(false);
 		}
 	}
+}
+
+Piece* Tetris::generateRandomPiece()
+{
+	int value = rand() % 7;
+	Tile::Type type;
+	Piece *piece = nullptr;
+	switch (value)
+	{
+	case 0: type = Tile::Type::SQUARE; piece = new Square(gameSpeed, renderer_); break;
+	case 1: type = Tile::Type::I; piece = new IShape(gameSpeed, renderer_); break;
+	case 2: type = Tile::Type::L; piece = new LShape(gameSpeed, renderer_); break;
+	case 3: type = Tile::Type::LR; piece = new LReverseShape(gameSpeed, renderer_); break;
+	case 4: type = Tile::Type::N; piece = new NShape(gameSpeed, renderer_); break;
+	case 5: type = Tile::Type::NR; piece = new NReverseShape(gameSpeed, renderer_); break;
+	case 6: type = Tile::Type::T; piece = new TShape(gameSpeed, renderer_); break;
+	}
+
+	return piece;
 }

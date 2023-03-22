@@ -67,8 +67,14 @@ void Tile::show()
 	SDL_RenderTexture(renderer_, texture_, &mpos, &pos_);
 }
 
-bool Tile::isColliding()
+bool Tile::isCollidingWith(Tile *tile)
 {
+	auto x = tile->getPosition().x;
+	auto y = tile->getPosition().y;
+	auto x_ = this->getPosition().x;
+	auto y_ = this->getPosition().y;
+	if (x == x_ && y + 1 == y_)
+		return true;
 	return false;
 }
 

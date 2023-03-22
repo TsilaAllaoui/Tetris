@@ -26,6 +26,12 @@ class Piece
 		// Piece speeds
 		float speed_, tmpSpeed_;
     
+		// To know if Piece is starting 
+		bool isStarting_;
+
+		// To know if the Piece is colliding up
+		bool upperColision_;
+
 	public:
 		/**
 		*\ brief Constructor
@@ -46,7 +52,7 @@ class Piece
 		*\ param tiles The list of tiles composing the piece
 		*\ return
 		*/
-        void update();
+        void update(const std::vector<Tile*>& _tiles);
         
 		/**
 		*\ brief Render piece on window
@@ -59,6 +65,18 @@ class Piece
 		*\ return
 		*/
 		bool isActive();
+
+		/**
+		*\ brief Getter for start status
+		*\ return
+		*/
+		bool isStarting();
+
+		/**
+		*\ brief Getter for collision up status
+		*\ return
+		*/
+		bool isCollidingUp();
 
 		/**
 		*\ brief Increase/Decrease speed of piece
@@ -84,10 +102,17 @@ class Piece
 
 		/**
 		*\ brief For checking collision
+		*\ param tiles The game current tiles on screen
 		*\ free Need to be overrided
 		*\ return
 		*/
-		virtual bool checkCollision() = 0;
+		bool checkCollision(const std::vector<Tile*>& tiles);
+
+		/**
+		*\ brief For checking collision
+		*\ return
+		*/
+		std::vector<Tile*> getTiles();
 };
 
 class Square:public Piece
@@ -96,7 +121,6 @@ class Square:public Piece
 		Square(const float& gameSpeed, SDL_Renderer *renderer);
         void rotatePiece() override;
         void move(const Tile::Direction& direction) override;
-		bool checkCollision() override;
 };
 
 class IShape:public Piece
@@ -105,7 +129,6 @@ class IShape:public Piece
 		IShape(const float& gameSpeed, SDL_Renderer* renderer);
 		void rotatePiece() override;
 		void move(const Tile::Direction& direction) override;
-		bool checkCollision() override;
 };
 
 class LShape:public Piece
@@ -114,7 +137,6 @@ class LShape:public Piece
 		LShape(const float& gameSpeed, SDL_Renderer* renderer);
 		void rotatePiece() override;
 		void move(const Tile::Direction& direction) override;
-		bool checkCollision() override;
 };
 
 class LReverseShape:public Piece
@@ -123,32 +145,28 @@ class LReverseShape:public Piece
 		LReverseShape(const float& gameSpeed, SDL_Renderer* renderer);
 		void rotatePiece() override;
 		void move(const Tile::Direction& direction) override;
-		bool checkCollision() override;
 };
 
-class N_piece:public Piece
+class NShape:public Piece
 {
     public:
-        N_piece(const float& game_speed, SDL_Renderer* renderer);
+        NShape(const float& game_speed, SDL_Renderer* renderer);
         void rotatePiece() override;
 		void move(const Tile::Direction& direction) override;
-		bool checkCollision() override;
 };
 
-class N_reverse_piece:public Piece
+class NReverseShape:public Piece
 {
 public:
-	N_reverse_piece(const float& game_speed, SDL_Renderer* renderer);
+	NReverseShape(const float& game_speed, SDL_Renderer* renderer);
 	void rotatePiece() override;
 	void move(const Tile::Direction& direction) override;
-	bool checkCollision() override;
 };
 
-class T_piece:public Piece
+class TShape:public Piece
 {
     public:
-		T_piece(const float& game_speed, SDL_Renderer* renderer);
+		TShape(const float& game_speed, SDL_Renderer* renderer);
 		void rotatePiece() override;
 		void move(const Tile::Direction& direction) override;
-		bool checkCollision() override;
 };

@@ -1,9 +1,11 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <stack>
+
 #include "timer.h"
-#include "tile.h"
 #include "piece.h"
+#include "tile.h"
 
 // Tetris game class
 class Tetris
@@ -26,7 +28,10 @@ class Tetris
         SDL_FRect pos_b;
 
 		// All pieces of the tetris game
-		std::vector<Piece*> pieces;
+		std::vector<Piece*> pieces_;
+
+		// The tiles currently in the game
+		std::vector<Tile*> tiles_;
 
 		// The active Piece
 		Piece* activePiece;
@@ -85,4 +90,10 @@ class Tetris
 		*\ return
 		*/
 		void handleKey();
+
+		/**
+		*\ brief Generate a random piece
+		*\ return
+		*/
+		Piece* generateRandomPiece();
 };

@@ -72,7 +72,8 @@ class Tile
 		void show();
 
 		/** brief Check collision of the tile
+		*\ param tile The other tile to check collision with
 		*\ return true if there is collision
 		*/
-		bool isColliding();
+		bool isCollidingWith(Tile *tile);
 };

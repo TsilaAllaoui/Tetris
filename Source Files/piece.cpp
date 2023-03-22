@@ -15,6 +15,10 @@ Piece::Piece(const float&gameSpeed, SDL_Renderer* renderer)
 	// Setting up the piece falling speed
 	speed_ = Tetris::gameSpeed * 1000;
 	tmpSpeed_ = Tetris::gameSpeed * 1000;
+
+	// Set start status
+	isStarting_ = true;
+	upperColision_ = false;
 }
 
 Piece::~Piece()
@@ -29,16 +33,18 @@ Piece::~Piece()
 	tmpSpeed_ = 0;
 }
 
-void Piece::update()
+void Piece::update(const std::vector<Tile*>& _tiles)
 {
 	// Checking collision
-	checkCollision();
+	checkCollision(_tiles);
 
 	// If timer exceed current speed, we move all tiles of the piece down
 	if (active_ && timer_.getTime() > speed_)
 	{
 		for (auto& tile : tiles)
 			tile->move(Tile::Direction::DOWNDIR);
+		if (isStarting_)
+			isStarting_ = false;
 		timer_.start();
 	}
 }
@@ -53,6 +59,16 @@ void Piece::show()
 bool Piece::isActive()
 {
 	return active_;
+}
+
+bool Piece::isStarting()
+{
+	return isStarting_;
+}
+
+bool Piece::isCollidingUp()
+{
+	return upperColision_;
 }
 
 void Piece::changeSpeed(const bool& increase)
@@ -97,17 +113,35 @@ void Square::move(const Tile::Direction& direction)
 	}
 }
 
-bool Square::checkCollision()
+bool Piece::checkCollision(const std::vector<Tile*>& _tiles)
 {
-	// If one the tile of the piece is collidingde
+	auto checkTilesCollision = [](Tile* currentTile, const std::vector<Tile*>& _tiles)
+	{
+		for (auto& tile : _tiles)
+		{
+			if (tile->isCollidingWith(currentTile))
+				return true;
+		}
+		return false;
+	};
+
+	// If one the tile of the piece is colliding
 	for (auto& tile : tiles)
 	{
-		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
+		if ((tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size || tile->getPosition().y <= 0 && !isStarting_) || checkTilesCollision(tile, _tiles))
 		{
+			if (tile->getPosition().y <= 0 && !isStarting_)
+				upperColision_ = true;
 			active_ = false;
 			return true;
 		}
 	}
+	return false;
+}
+
+std::vector<Tile*> Piece::getTiles()
+{
+	return tiles;
 }
 
 
@@ -181,20 +215,6 @@ void IShape::move(const Tile::Direction& direction)
 	}
 }
 
-bool IShape::checkCollision()
-{
-	// If one the tile of the piece is collidingde
-	for (auto& tile : tiles)
-	{
-		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
-		{
-			active_ = false;
-			return true;
-		}
-	}
-}
-
-
 /*********	L PIECE	**********/
 
 LShape::LShape(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
@@ -266,19 +286,6 @@ void LShape::move(const Tile::Direction& direction)
 		}
 		for (auto& tile : tiles)
 			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
-	}
-}
-
-bool LShape::checkCollision()
-{
-	// If one the tile of the piece is collidingde
-	for (auto& tile : tiles)
-	{
-		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
-		{
-			active_ = false;
-			return true;
-		}
 	}
 }
 
@@ -356,23 +363,10 @@ void LReverseShape::move(const Tile::Direction& direction)
 	}
 }
 
-bool LReverseShape::checkCollision()
-{
-	// If one the tile of the piece is collidingde
-	for (auto& tile : tiles)
-	{
-		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
-		{
-			active_ = false;
-			return true;
-		}
-	}
-}
-
 
 /*********	N PIECE	**********/
 
-N_piece::N_piece(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
+NShape::NShape(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
 {
 	// Setting the type
 	type_ = Tile::Type::N;
@@ -383,7 +377,7 @@ N_piece::N_piece(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpe
 	tiles.emplace_back(new Tile(8, 3, Tile::Type::N, renderer_));
 }
 
-void N_piece::rotatePiece()
+void NShape::rotatePiece()
 {
 	auto firstTile = tiles[0]->getPosition();
 	auto pivotTile = tiles[1]->getPosition();
@@ -401,7 +395,7 @@ void N_piece::rotatePiece()
 	}
 }
 
-void N_piece::move(const Tile::Direction& direction)
+void NShape::move(const Tile::Direction& direction)
 {
 	if (!active_)
 		return;
@@ -426,23 +420,9 @@ void N_piece::move(const Tile::Direction& direction)
 	}
 }
 
-bool N_piece::checkCollision()
-{
-	// If one the tile of the piece is collidingde
-	for (auto& tile : tiles)
-	{
-		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
-		{
-			active_ = false;
-			return true;
-		}
-	}
-}
-
-
 /*********	N REVERSE PIECE	**********/
 
-N_reverse_piece::N_reverse_piece(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
+NReverseShape::NReverseShape(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
 {
 	// Setting the type
 	type_ = Tile::Type::NR;
@@ -453,7 +433,7 @@ N_reverse_piece::N_reverse_piece(const float& gameSpeed, SDL_Renderer* renderer)
 	tiles.emplace_back(new Tile(7, 3, Tile::Type::NR, renderer_));
 }
 
-void N_reverse_piece::rotatePiece()
+void NReverseShape::rotatePiece()
 {
 	auto firstTile = tiles[0]->getPosition();
 	auto pivotTile = tiles[1]->getPosition();
@@ -471,7 +451,7 @@ void N_reverse_piece::rotatePiece()
 	}
 }
 
-void N_reverse_piece::move(const Tile::Direction& direction)
+void NReverseShape::move(const Tile::Direction& direction)
 {
 	if (!active_)
 		return;
@@ -497,23 +477,10 @@ void N_reverse_piece::move(const Tile::Direction& direction)
 	}
 }
 
-bool N_reverse_piece::checkCollision()
-{
-	// If one the tile of the piece is collidingde
-	for (auto& tile : tiles)
-	{
-		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
-		{
-			active_ = false;
-			return true;
-		}
-	}
-}
-
 
 /*********	T PIECE	**********/
 
-T_piece::T_piece(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
+TShape::TShape(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpeed, renderer)
 {
 	// Setting the type
 	type_ = Tile::Type::T;
@@ -524,7 +491,7 @@ T_piece::T_piece(const float& gameSpeed, SDL_Renderer* renderer) : Piece(gameSpe
 	tiles.emplace_back(new Tile(8, 1, Tile::Type::T, renderer_));
 }
 
-void T_piece::rotatePiece()
+void TShape::rotatePiece()
 {
 	auto firstTile = tiles[0]->getPosition();
 	auto pivotTile = tiles[1]->getPosition();
@@ -548,7 +515,7 @@ void T_piece::rotatePiece()
 	}
 }
 
-void T_piece::move(const Tile::Direction& direction)
+void TShape::move(const Tile::Direction& direction)
 {
 	if (!active_)
 		return;
@@ -571,18 +538,5 @@ void T_piece::move(const Tile::Direction& direction)
 		}
 		for (auto& tile : tiles)
 			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
-	}
-}
-
-bool T_piece::checkCollision()
-{
-	// If one the tile of the piece is collidingde
-	for (auto& tile : tiles)
-	{
-		if (tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size)
-		{
-			active_ = false;
-			return true;
-		}
 	}
 }
