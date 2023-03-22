@@ -39,6 +39,9 @@ Tetris::Tetris()
 	// Intanciating attributes
 	activePiece = nullptr;
 	score = 0;
+
+	// Setting up game ove state
+	isGameOver_ = false;
 }
 
 Tetris::~Tetris()
@@ -57,7 +60,7 @@ void Tetris::play()
 	init();
 
 	// Main game loop
-    while(!isGameOver())
+    while(/*!isGameOver() &&*/ !isGameOver_)
     {
 		// update timer
         timer.start();
@@ -93,6 +96,12 @@ void Tetris::update()
 	// Check if current piece is colliding underneath
 	if (!activePiece->isActive())
 	{
+		if (activePiece->isCollidingUp())
+		{
+			isGameOver_ = true;
+			return;
+		}
+
 		auto currentTiles = activePiece->getTiles();
 		for (auto& tile : currentTiles)
 			tiles_.emplace_back(tile);

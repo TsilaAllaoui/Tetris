@@ -18,7 +18,6 @@ Piece::Piece(const float&gameSpeed, SDL_Renderer* renderer)
 
 	// Set start status
 	isStarting_ = true;
-	upperColision_ = false;
 }
 
 Piece::~Piece()
@@ -39,13 +38,16 @@ void Piece::update(const std::vector<Tile*>& _tiles)
 	checkCollision(_tiles);
 
 	// If timer exceed current speed, we move all tiles of the piece down
-	if (active_ && timer_.getTime() > speed_)
+	if (timer_.getTime() > speed_)
 	{
-		for (auto& tile : tiles)
-			tile->move(Tile::Direction::DOWNDIR);
 		if (isStarting_)
 			isStarting_ = false;
-		timer_.start();
+		if (active_)
+		{
+			for (auto& tile : tiles)
+				tile->move(Tile::Direction::DOWNDIR);
+			timer_.start();
+		}
 	}
 }
 
@@ -68,7 +70,10 @@ bool Piece::isStarting()
 
 bool Piece::isCollidingUp()
 {
-	return upperColision_;
+	for (auto& tile : tiles)
+		if (tile->getPosition().y <= 0)
+			return true;
+	return false;
 }
 
 void Piece::changeSpeed(const bool& increase)
@@ -77,6 +82,37 @@ void Piece::changeSpeed(const bool& increase)
 		speed_ = tmpSpeed_ / 25;
 	else speed_ = Tetris::gameSpeed * 1000 ;
 }
+
+
+bool Piece::checkCollision(const std::vector<Tile*>& _tiles)
+{
+	auto checkTilesCollision = [](Tile* currentTile, const std::vector<Tile*>& _tiles)
+	{
+		for (auto& tile : _tiles)
+		{
+			if (tile->isCollidingWith(currentTile))
+				return true;
+		}
+		return false;
+	};
+
+	// If one the tile of the piece is colliding
+	for (auto& tile : tiles)
+	{
+		if ((tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size || tile->getPosition().y <= 0 && !isStarting_) || checkTilesCollision(tile, _tiles))
+		{
+			active_ = false;
+			return true;
+		}
+	}
+	return false;
+}
+
+std::vector<Tile*> Piece::getTiles()
+{
+	return tiles;
+}
+
 
 /*********	SQUARE PIECE	**********/
 
@@ -112,38 +148,6 @@ void Square::move(const Tile::Direction& direction)
 			tile->set(tile->getPosition().x - 1, tile->getPosition().y);
 	}
 }
-
-bool Piece::checkCollision(const std::vector<Tile*>& _tiles)
-{
-	auto checkTilesCollision = [](Tile* currentTile, const std::vector<Tile*>& _tiles)
-	{
-		for (auto& tile : _tiles)
-		{
-			if (tile->isCollidingWith(currentTile))
-				return true;
-		}
-		return false;
-	};
-
-	// If one the tile of the piece is colliding
-	for (auto& tile : tiles)
-	{
-		if ((tile->getPosition().y + 1 == Tetris::HEIGHT / Tile::Size || tile->getPosition().y <= 0 && !isStarting_) || checkTilesCollision(tile, _tiles))
-		{
-			if (tile->getPosition().y <= 0 && !isStarting_)
-				upperColision_ = true;
-			active_ = false;
-			return true;
-		}
-	}
-	return false;
-}
-
-std::vector<Tile*> Piece::getTiles()
-{
-	return tiles;
-}
-
 
 /*********	I PIECE	**********/
 

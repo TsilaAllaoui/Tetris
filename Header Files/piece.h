@@ -29,9 +29,6 @@ class Piece
 		// To know if Piece is starting 
 		bool isStarting_;
 
-		// To know if the Piece is colliding up
-		bool upperColision_;
-
 	public:
 		/**
 		*\ brief Constructor

@@ -36,6 +36,8 @@ class Tetris
 		// The active Piece
 		Piece* activePiece;
 
+		// Chech if game over
+		bool isGameOver_;
     public:
 
 		/**
