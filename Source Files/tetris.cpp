@@ -10,7 +10,7 @@
 
 const int Tetris::WIDTH = 160;
 const int Tetris::HEIGHT = 320;
-const int Tetris::S_WIDTH = 160;
+const int Tetris::S_WIDTH = 240;
 const int Tetris::FPS_CAP = 60;
 int Tetris::gameSpeed = 1;
 
@@ -20,7 +20,7 @@ Tetris::Tetris()
     std::srand(std::time(0));
 
 	// Creating window
-	window_ = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Tetris::WIDTH, Tetris::HEIGHT, SDL_WINDOW_INPUT_FOCUS);
+	window_ = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Tetris::S_WIDTH, Tetris::HEIGHT, SDL_WINDOW_INPUT_FOCUS);
 
 	// Creating renderer
 	renderer_ = SDL_CreateRenderer(window_, NULL, 0);
@@ -29,6 +29,7 @@ Tetris::Tetris()
 	sprite = IMG_LoadTexture(renderer_, "./data/images/tile.png");
     background = IMG_LoadTexture(renderer_, "./data/images/bg.png");
     titlescreen = IMG_LoadTexture(renderer_, "./data/images/titlescreen.png");
+	ui = IMG_LoadTexture(renderer_, "./data/images/ui.png");
 
 	// Setting sprite position
     pos_b.x = Tetris::S_WIDTH + Tile::Size;
@@ -128,8 +129,21 @@ void Tetris::show()
 	for (auto& tile : tiles_)
 		tile->show();
 
+	// Showing ui
+	showUi();
+
 	// Updating window
 	SDL_RenderPresent(renderer_);
+}
+
+void Tetris::showUi()
+{
+	SDL_FRect pos;
+	pos.x = Tetris::WIDTH; 
+	pos.y = 0;
+	pos.h = Tetris::HEIGHT;
+	pos.w = 80;
+	SDL_RenderTexture(renderer_, ui, NULL, &pos);
 }
 
 bool Tetris::isGameOver()
@@ -253,5 +267,8 @@ void Tetris::eraseLines()
 			for (auto& tile : tiles_)
 				tile->move(Tile::Direction::DOWNDIR);
 		}
+
+		// Little delay
+		SDL_Delay(800);
 	}
 }

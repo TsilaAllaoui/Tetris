@@ -17,7 +17,7 @@ class Tetris
 		SDL_Renderer* renderer_;
 
 		// Textures
-        SDL_Texture *sprite, *background, *score, *titlescreen;
+        SDL_Texture *sprite, *background, *score, *titlescreen, *ui;
 
 		// Main timer for the game
         Timer timer;
@@ -75,6 +75,12 @@ class Tetris
 		*\ return
 		*/
         void show();
+
+		/**
+		*\ brief Render game ui
+		*\ return
+		*/
+		void showUi();
 
 		/**
 		*\ brief To check if the current game is over
