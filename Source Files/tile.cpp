@@ -69,11 +69,12 @@ void Tile::show()
 
 bool Tile::isCollidingWith(Tile *tile)
 {
+	
 	auto x = tile->getPosition().x;
 	auto y = tile->getPosition().y;
 	auto x_ = this->getPosition().x;
 	auto y_ = this->getPosition().y;
-	if (x == x_ && y + 1 == y_)
+	if (y + 1 == y_ && x == x_)
 		return true;
 	return false;
 }

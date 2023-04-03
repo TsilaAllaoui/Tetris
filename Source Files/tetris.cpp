@@ -166,11 +166,11 @@ void Tetris::handleKey()
 				exit(EXIT_SUCCESS);
 
 			// If moving left
-			if (event.key.keysym.sym == SDLK_LEFT)
+			if (event.key.keysym.sym == SDLK_LEFT && !activePiece->checkLeftCollision(tiles_))
 				activePiece->move(Tile::Direction::LEFTDIR);
 			
 			// If moving right
-			if (event.key.keysym.sym == SDLK_RIGHT)
+			if (event.key.keysym.sym == SDLK_RIGHT && !activePiece->checkRightCollision(tiles_))
 				activePiece->move(Tile::Direction::RIGHTDIR);
 
 			// If moving down faster
@@ -211,6 +211,7 @@ Piece* Tetris::generateRandomPiece()
 	case 6: type = Tile::Type::T; piece = new TShape(gameSpeed, renderer_); break;
 	}
 
+	//return new Square(gameSpeed, renderer_);
 	return piece;
 }
 

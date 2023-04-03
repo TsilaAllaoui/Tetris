@@ -113,6 +113,36 @@ std::vector<Tile*> Piece::getTiles()
 	return tiles;
 }
 
+bool Piece::checkLeftCollision(const std::vector<Tile*>& _tiles)
+{
+	for (auto& tile : tiles)
+	{
+		for (auto& _tile : _tiles)
+		{
+			auto pos = tile->getPosition();
+			auto _pos = _tile->getPosition();
+			if (pos.y == _pos.y && pos.x - 1 == _pos.x)
+				return true;
+		}
+	}
+	return false;
+}
+
+bool Piece::checkRightCollision(const std::vector<Tile*>& _tiles)
+{
+	for (auto& tile : tiles)
+	{
+		for (auto& _tile : _tiles)
+		{
+			auto pos = tile->getPosition();
+			auto _pos = _tile->getPosition();
+			if (pos.y == _pos.y && pos.x + 1 == _pos.x)
+				return true;
+		}
+	}
+	return false;
+}
+
 
 /*********	SQUARE PIECE	**********/
 

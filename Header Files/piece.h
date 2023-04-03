@@ -90,7 +90,7 @@ class Piece
 		*\ free Need to be overrided
 		*\ return
 		*/
-        virtual void move(const Tile::Direction& direction ) = 0;
+        virtual void move(const Tile::Direction& direction) = 0;
 
 		/**
 		*\ brief Rotate the piece
@@ -105,13 +105,29 @@ class Piece
 		*\ free Need to be overrided
 		*\ return
 		*/
-		bool checkCollision(const std::vector<Tile*>& tiles);
+		bool checkCollision(const std::vector<Tile*>& _tiles);
 
 		/**
 		*\ brief For checking collision
 		*\ return
 		*/
 		std::vector<Tile*> getTiles();
+
+		/**
+		*\ brief For checking left collision
+		*\ param tiles The game current tiles on screen
+		*\ free Need to be overrided
+		*\ return
+		*/
+		bool checkLeftCollision(const std::vector<Tile*>& _tiles);
+
+		/**
+		*\ brief For checking right collision
+		*\ param tiles The game current tiles on screen
+		*\ free Need to be overrided
+		*\ return
+		*/
+		bool checkRightCollision(const std::vector<Tile*>& _tiles);
 };
 
 class Square:public Piece
