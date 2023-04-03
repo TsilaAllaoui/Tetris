@@ -113,7 +113,6 @@ void Tetris::update()
 
 		// Check if lines need to be erased
 		eraseLines();
-
 	}
 }
 
@@ -266,6 +265,7 @@ void Tetris::eraseLines()
 			for (auto& tile : pair.second)
 				tiles_.erase(std::find(tiles_.begin(), tiles_.end(), tile));
 			for (auto& tile : tiles_)
+				if (tile->getPosition().y < pair.first->getPosition().y)
 				tile->move(Tile::Direction::DOWNDIR);
 		}
 
