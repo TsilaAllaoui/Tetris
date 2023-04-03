@@ -2,7 +2,9 @@
 
 #include "timer.h"
 #include "tile.h"
+
 #include <SDL3/SDL.h>
+#include <set>
 
 // Piece class
 class Piece

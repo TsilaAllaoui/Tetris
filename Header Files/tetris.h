@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <stack>
+#include <set>
 
 #include "timer.h"
 #include "piece.h"
@@ -98,4 +99,10 @@ class Tetris
 		*\ return
 		*/
 		Piece* generateRandomPiece();
+
+		/**
+		*\ brief Erase possible lines
+		*\ return
+		*/
+		void eraseLines();
 };

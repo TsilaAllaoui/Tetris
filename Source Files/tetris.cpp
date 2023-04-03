@@ -1,14 +1,15 @@
 
-#include<SDL3/SDL.h>
-#include <ctime>
 #include <SDL3/SDL_image.h>
 #include <SDL3/SDL.h>
+#include<SDL3/SDL.h>
+#include <ctime>
+#include <map>
 
 #include "tetris.h"
 //#include <SDL/SDL_ttf.h>
 
-const int Tetris::WIDTH = 272;
-const int Tetris::HEIGHT = 352;
+const int Tetris::WIDTH = 160;
+const int Tetris::HEIGHT = 320;
 const int Tetris::S_WIDTH = 160;
 const int Tetris::FPS_CAP = 60;
 int Tetris::gameSpeed = 1;
@@ -108,6 +109,10 @@ void Tetris::update()
 		Piece* piece = generateRandomPiece();
 		pieces_.emplace_back(piece);
 		activePiece = pieces_.at(pieces_.size() - 1);
+
+		// Check if lines need to be erased
+		eraseLines();
+
 	}
 }
 
@@ -117,9 +122,11 @@ void Tetris::show()
 	SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
 	SDL_RenderClear(renderer_);
 
-	// Showing pieces
-	for (auto& piece : pieces_)
-		piece->show();
+	activePiece->show();
+
+	// Showing tiles
+	for (auto& tile : tiles_)
+		tile->show();
 
 	// Updating window
 	SDL_RenderPresent(renderer_);
@@ -173,8 +180,11 @@ void Tetris::handleKey()
 
 Piece* Tetris::generateRandomPiece()
 {
+	// Generate random number
 	int value = rand() % 7;
 	Tile::Type type;
+
+	// Creating random piece
 	Piece *piece = nullptr;
 	switch (value)
 	{
@@ -188,4 +198,60 @@ Piece* Tetris::generateRandomPiece()
 	}
 
 	return piece;
+}
+
+void Tetris::eraseLines()
+{
+	// Get all leftmost tiles
+	std::vector<Tile*> leftMostTiles;
+	for (auto& tile : tiles_)
+		if (tile->getPosition().x == 0)
+			leftMostTiles.emplace_back(tile);
+
+	// The list of pair of (leftmost tile/list of tiles in the same line)
+	std::map<Tile*, std::vector<Tile*>> toErase;
+
+	// Feeding the list
+	for (auto& leftTile : leftMostTiles)
+	{
+		std::vector<Tile*> tmp;
+		for (auto& tile : tiles_)
+		{
+			if (tile == leftTile)
+				continue;
+
+			if (tile->getPosition().y == leftTile->getPosition().y)
+				tmp.emplace_back(tile);
+		}
+		if (tmp.size() == Tetris::WIDTH / Tile::Size - 1)
+			toErase[leftTile].insert(toErase[leftTile].end(), tmp.begin(), tmp.end());
+	}
+
+	// If there is at least one line to be erased
+	if (toErase.size() > 0)
+	{
+		// Comparing by y position the leftmost tile
+		struct comp
+		{
+			bool operator()(Tile* t1, Tile* t2) const
+			{
+				return t1->getPosition().y > t2->getPosition().y;
+			}
+		};
+
+		// List of all pair sorted by y position of the leftmost tile
+		std::map<Tile*, std::vector<Tile*>, comp> sortedTiles;
+		for (auto& toErasePair : toErase)
+			sortedTiles[toErasePair.first] = toErasePair.second;
+
+		// Moving all remaining tiles down
+		for (auto& pair : sortedTiles)
+		{
+			tiles_.erase(std::find(tiles_.begin(), tiles_.end(), pair.first));
+			for (auto& tile : pair.second)
+				tiles_.erase(std::find(tiles_.begin(), tiles_.end(), tile));
+			for (auto& tile : tiles_)
+				tile->move(Tile::Direction::DOWNDIR);
+		}
+	}
 }
