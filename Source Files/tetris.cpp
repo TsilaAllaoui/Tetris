@@ -91,10 +91,10 @@ void Tetris::init()
 	activePiece_->offset(-2);
 
 	// Creating stored piece
-	repositionStoredPiece();
+	repositionNextPiece();
 }
 
-void Tetris::repositionStoredPiece()
+void Tetris::repositionNextPiece()
 {
 	nextPiece_ = generateRandomPiece();
 	float x = 0, y = 0;
@@ -104,6 +104,34 @@ void Tetris::repositionStoredPiece()
 	else if (nextPiece_->getType() == Tile::Type::N || nextPiece_->getType() == Tile::Type::NR) { x = 5; y = 1; }
 	else if (nextPiece_->getType() == Tile::Type::L || nextPiece_->getType() == Tile::Type::LR) { x = 5; y = 2; }
 	nextPiece_->offset(x, y);
+}
+
+void Tetris::repositionStoredPiece()
+{
+	float x = 0, y = 0;
+	if (storedPiece_->getType() == Tile::Type::SQUARE) { x = 5.15; y = 12.5; }
+	else if (storedPiece_->getType() == Tile::Type::I) { x = 5.5; y = 11.6; }
+	else if (storedPiece_->getType() == Tile::Type::T) { x = 4.5; y = 11.5; }
+	else if (storedPiece_->getType() == Tile::Type::N || storedPiece_->getType() == Tile::Type::NR) { x = 5; y = 11; }
+	else if (storedPiece_->getType() == Tile::Type::L || storedPiece_->getType() == Tile::Type::LR) { x = 5; y = 12; }
+	storedPiece_->offset(0, y);
+}
+
+void Tetris::storePiece()
+{
+	auto pos = activePiece_->getTiles().at(0)->getPosition();
+
+	Piece* piece = storedPiece_;
+	storedPiece_ = activePiece_;
+	if (!piece)
+		activePiece_ = nextPiece_;
+
+	else activePiece_ = storedPiece_;
+
+	activePiece_->offset(-2, 0);
+
+	repositionNextPiece();
+	repositionStoredPiece();
 }
 
 void Tetris::update()
@@ -127,7 +155,7 @@ void Tetris::update()
 		for (auto& tile : currentTiles)
 			tiles_.emplace_back(tile);
 		activePiece_ = generatePiece(nextPiece_->getType());
-		repositionStoredPiece();
+		repositionNextPiece();
 		pieces_.emplace_back(nextPiece_);
 
 		// Check if lines need to be erased
@@ -205,6 +233,18 @@ void Tetris::handleKey()
 			// If rotating
 			if (event.key.keysym.sym == SDLK_SPACE && activePiece_->isActive())
 				activePiece_->rotatePiece();
+
+			// If storing piece
+			if (event.key.keysym.sym == SDLK_TAB)
+			{
+				storePiece();
+			}
+
+			// If poping piece from store 
+			if (event.key.keysym.sym == SDLK_CAPSLOCK)
+			{
+
+			}
 
 		}
 

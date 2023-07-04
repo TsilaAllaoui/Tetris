@@ -125,5 +125,21 @@ class Tetris
 		*/
 		void eraseLines();
 
+		/**
+		*\ brief reposition next piece on the UI
+		*\ return
+		*/
+		void repositionNextPiece();
+
+		/**
+		*\ brief reposition stored piece on the UI
+		*\ return
+		*/
 		void repositionStoredPiece();
+
+		/**
+		*\ brief Store piece
+		*\ return
+		*/
+		void storePiece();
 };
