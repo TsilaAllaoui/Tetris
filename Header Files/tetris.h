@@ -20,7 +20,7 @@ class Tetris
         SDL_Texture *sprite, *background, *score, *titlescreen, *ui;
 
 		// Main timer for the game
-        Timer timer;
+        Timer timer_;
 
 		// The current score
         int CurrentScore;
@@ -35,7 +35,13 @@ class Tetris
 		std::vector<Tile*> tiles_;
 
 		// The active Piece
-		Piece* activePiece;
+		Piece* activePiece_;
+
+		// The Stored Piece
+		Piece* storedPiece_;
+
+		// The Next Piece
+		Piece* nextPiece_;
 
 		// Chech if game over
 		bool isGameOver_;
@@ -107,8 +113,17 @@ class Tetris
 		Piece* generateRandomPiece();
 
 		/**
+		*\ brief Generate specified piece
+		*\ The type of the piece
+		*\ return The newly created specified instance of a piece
+		*/
+		Piece* generatePiece(int type);
+
+		/**
 		*\ brief Erase possible lines
 		*\ return
 		*/
 		void eraseLines();
+
+		void repositionStoredPiece();
 };

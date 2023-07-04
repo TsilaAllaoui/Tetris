@@ -143,6 +143,20 @@ bool Piece::checkRightCollision(const std::vector<Tile*>& _tiles)
 	return false;
 }
 
+void Piece::offset(float x, float y)
+{
+	for (auto& tile : tiles)
+	{
+		auto pos = tile->getPosition();
+		tile->set(pos.x + x, pos.y + y);
+	}
+}
+
+int Piece::getType()
+{
+	return type_;
+}
+
 
 /*********	SQUARE PIECE	**********/
 

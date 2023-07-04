@@ -8,7 +8,7 @@
 #include "tetris.h"
 //#include <SDL/SDL_ttf.h>
 
-const int Tetris::WIDTH = 160;
+const int Tetris::WIDTH = 176;
 const int Tetris::HEIGHT = 320;
 const int Tetris::S_WIDTH = 240;
 const int Tetris::FPS_CAP = 60;
@@ -17,7 +17,7 @@ int Tetris::gameSpeed = 1;
 Tetris::Tetris()
 {
 	// For randomness
-    std::srand(std::time(0));
+	std::srand(std::time(0));
 
 	// Creating window
 	window_ = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Tetris::S_WIDTH, Tetris::HEIGHT, SDL_WINDOW_INPUT_FOCUS);
@@ -27,19 +27,21 @@ Tetris::Tetris()
 
 	// Loading assets
 	sprite = IMG_LoadTexture(renderer_, "./data/images/tile.png");
-    background = IMG_LoadTexture(renderer_, "./data/images/bg.png");
-    titlescreen = IMG_LoadTexture(renderer_, "./data/images/titlescreen.png");
+	background = IMG_LoadTexture(renderer_, "./data/images/bg.png");
+	titlescreen = IMG_LoadTexture(renderer_, "./data/images/titlescreen.png");
 	ui = IMG_LoadTexture(renderer_, "./data/images/ui.png");
 
 	// Setting sprite position
-    pos_b.x = Tetris::S_WIDTH + Tile::Size;
-    pos_b.y = 0;
+	pos_b.x = Tetris::S_WIDTH + Tile::Size;
+	pos_b.y = 0;
 
 	// Setting current score
-    CurrentScore = 0;
+	CurrentScore = 0;
 
 	// Intanciating attributes
-	activePiece = nullptr;
+	activePiece_ = nullptr;
+	storedPiece_ = nullptr;
+	nextPiece_ = nullptr;
 	score = 0;
 
 	// Setting up game ove state
@@ -58,33 +60,50 @@ Tetris::~Tetris()
 
 void Tetris::play()
 {
-    // Init the game
+	// Init the game
 	init();
 
 	// Main game loop
-    while(/*!isGameOver() &&*/ !isGameOver_)
-    {
+	while (/*!isGameOver() &&*/ !isGameOver_)
+	{
 		// update timer
-        timer.start();
+		timer_.start();
 
 		// Update the game objects
-        update();
+		// Update the game objects
+		update();
 
 		// Render game objects
-        show();
+		show();
 
 		// For constant FPS
-        if ((1000/Tetris::FPS_CAP) > timer.getTime())
-            SDL_Delay((1000/Tetris::FPS_CAP) - timer.getTime());
-    }
+		if ((1000 / Tetris::FPS_CAP) > timer_.getTime())
+			SDL_Delay((1000 / Tetris::FPS_CAP) - timer_.getTime());
+	}
 }
 
 void Tetris::init()
 {
 	// Creating the first piece and make it as the active piece
-	Piece *piece = generateRandomPiece();
+	Piece* piece = generateRandomPiece();
 	pieces_.emplace_back(piece);
-	activePiece = pieces_.at(pieces_.size() - 1);
+	activePiece_ = pieces_.at(pieces_.size() - 1);
+	activePiece_->offset(-2);
+
+	// Creating stored piece
+	repositionStoredPiece();
+}
+
+void Tetris::repositionStoredPiece()
+{
+	nextPiece_ = generateRandomPiece();
+	float x = 0, y = 0;
+	if (nextPiece_->getType() == Tile::Type::SQUARE) { x = 5.15; y = 2.5; }
+	else if (nextPiece_->getType() == Tile::Type::I) { x = 5.5; y = 1.6; }
+	else if (nextPiece_->getType() == Tile::Type::T) { x = 4.5; y = 1.5; }
+	else if (nextPiece_->getType() == Tile::Type::N || nextPiece_->getType() == Tile::Type::NR) { x = 5; y = 1; }
+	else if (nextPiece_->getType() == Tile::Type::L || nextPiece_->getType() == Tile::Type::LR) { x = 5; y = 2; }
+	nextPiece_->offset(x, y);
 }
 
 void Tetris::update()
@@ -93,23 +112,23 @@ void Tetris::update()
 	handleKey();
 
 	// Moving active piece down
-	activePiece->update(tiles_);
+	activePiece_->update(tiles_);
 
 	// Check if current piece is colliding underneath
-	if (!activePiece->isActive())
+	if (!activePiece_->isActive())
 	{
-		if (activePiece->isCollidingUp())
+		if (activePiece_->isCollidingUp())
 		{
 			isGameOver_ = true;
 			return;
 		}
 
-		auto currentTiles = activePiece->getTiles();
+		auto currentTiles = activePiece_->getTiles();
 		for (auto& tile : currentTiles)
 			tiles_.emplace_back(tile);
-		Piece* piece = generateRandomPiece();
-		pieces_.emplace_back(piece);
-		activePiece = pieces_.at(pieces_.size() - 1);
+		activePiece_ = generatePiece(nextPiece_->getType());
+		repositionStoredPiece();
+		pieces_.emplace_back(nextPiece_);
 
 		// Check if lines need to be erased
 		eraseLines();
@@ -122,7 +141,7 @@ void Tetris::show()
 	SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
 	SDL_RenderClear(renderer_);
 
-	activePiece->show();
+	activePiece_->show();
 
 	// Showing tiles
 	for (auto& tile : tiles_)
@@ -131,6 +150,13 @@ void Tetris::show()
 	// Showing ui
 	showUi();
 
+	// Show next piece
+	nextPiece_->show();
+
+	// Show stored piece if there is any
+	if (storedPiece_)
+		storedPiece_->show();
+
 	// Updating window
 	SDL_RenderPresent(renderer_);
 }
@@ -138,16 +164,16 @@ void Tetris::show()
 void Tetris::showUi()
 {
 	SDL_FRect pos;
-	pos.x = Tetris::WIDTH; 
+	pos.x = Tetris::WIDTH;
 	pos.y = 0;
 	pos.h = Tetris::HEIGHT;
-	pos.w = 80;
+	pos.w = 66;
 	SDL_RenderTexture(renderer_, ui, NULL, &pos);
 }
 
 bool Tetris::isGameOver()
 {
-	if (activePiece->isCollidingUp())
+	if (activePiece_->isCollidingUp())
 		return true;
 	return false;
 }
@@ -165,20 +191,20 @@ void Tetris::handleKey()
 				exit(EXIT_SUCCESS);
 
 			// If moving left
-			if (event.key.keysym.sym == SDLK_LEFT && !activePiece->checkLeftCollision(tiles_))
-				activePiece->move(Tile::Direction::LEFTDIR);
-			
+			if (event.key.keysym.sym == SDLK_LEFT && !activePiece_->checkLeftCollision(tiles_))
+				activePiece_->move(Tile::Direction::LEFTDIR);
+
 			// If moving right
-			if (event.key.keysym.sym == SDLK_RIGHT && !activePiece->checkRightCollision(tiles_))
-				activePiece->move(Tile::Direction::RIGHTDIR);
+			if (event.key.keysym.sym == SDLK_RIGHT && !activePiece_->checkRightCollision(tiles_))
+				activePiece_->move(Tile::Direction::RIGHTDIR);
 
 			// If moving down faster
 			if (event.key.keysym.sym == SDLK_DOWN)
-				activePiece->changeSpeed(true);
+				activePiece_->changeSpeed(true);
 
 			// If rotating
-			if (event.key.keysym.sym == SDLK_SPACE && activePiece->isActive())
-				activePiece->rotatePiece();
+			if (event.key.keysym.sym == SDLK_SPACE && activePiece_->isActive())
+				activePiece_->rotatePiece();
 
 		}
 
@@ -186,7 +212,7 @@ void Tetris::handleKey()
 		{
 			// If moving down faster
 			if (event.key.keysym.sym == SDLK_DOWN)
-				activePiece->changeSpeed(false);
+				activePiece_->changeSpeed(false);
 		}
 	}
 }
@@ -198,7 +224,7 @@ Piece* Tetris::generateRandomPiece()
 	Tile::Type type;
 
 	// Creating random piece
-	Piece *piece = nullptr;
+	Piece* piece = nullptr;
 	switch (value)
 	{
 	case 0: type = Tile::Type::SQUARE; piece = new Square(gameSpeed, renderer_); break;
@@ -211,6 +237,26 @@ Piece* Tetris::generateRandomPiece()
 	}
 
 	//return new Square(gameSpeed, renderer_);
+	return piece;
+}
+
+Piece* Tetris::generatePiece(int type)
+{
+	// Creating random piece
+	Piece* piece = nullptr;
+	switch (type)
+	{
+	case 0: type = Tile::Type::SQUARE; piece = new Square(gameSpeed, renderer_); break;
+	case 1: type = Tile::Type::I; piece = new IShape(gameSpeed, renderer_); break;
+	case 2: type = Tile::Type::L; piece = new LShape(gameSpeed, renderer_); break;
+	case 3: type = Tile::Type::LR; piece = new LReverseShape(gameSpeed, renderer_); break;
+	case 4: type = Tile::Type::N; piece = new NShape(gameSpeed, renderer_); break;
+	case 5: type = Tile::Type::NR; piece = new NReverseShape(gameSpeed, renderer_); break;
+	case 6: type = Tile::Type::T; piece = new TShape(gameSpeed, renderer_); break;
+	}
+
+	//return new Square(gameSpeed, renderer_);
+	piece->offset(-2);
 	return piece;
 }
 
@@ -266,7 +312,7 @@ void Tetris::eraseLines()
 				tiles_.erase(std::find(tiles_.begin(), tiles_.end(), tile));
 			for (auto& tile : tiles_)
 				if (tile->getPosition().y < pair.first->getPosition().y)
-				tile->move(Tile::Direction::DOWNDIR);
+					tile->move(Tile::Direction::DOWNDIR);
 		}
 
 		// Little delay

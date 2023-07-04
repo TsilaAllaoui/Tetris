@@ -128,6 +128,20 @@ class Piece
 		*\ return
 		*/
 		bool checkRightCollision(const std::vector<Tile*>& _tiles);
+
+		/**
+		*\ brief Offset piece position
+		*\ param X x offset
+		*\ param Y y offset
+		*\ return
+		*/
+		void offset(float x = 0, float y = 0);
+
+		/**
+		*\ brief Getter for the type of the piece
+		*\ return The piece type
+		*/
+		int getType();
 };
 
 class Square:public Piece
